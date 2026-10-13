@@ -43,6 +43,10 @@ Sam asked that the Market Street line "somebody's crew wants the corner" go, alo
 
 "Crew" stays: on its own it reads as a team. Whether any other word should go is Sam's call.
 
+## Fifth round (13 October): a larger battle space
+
+The floor, the spacing between fighters and the stage on screen are all larger (PLAN P21). Drawing only; the online protocol is unchanged. Seen in a whole fight's frames at 1280 by 800 and at phone width (390): everyone stays in frame.
+
 ## Checks run, and results
 
 | Command | Result |

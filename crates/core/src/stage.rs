@@ -73,15 +73,15 @@ const RING_MS: i32 = 700;
 const HOP_MS: i32 = 440;
 
 /// The floor everyone keeps to: half its width (x) and depth (z).
-const FLOOR_X: i32 = cm(600);
-const FLOOR_Z: i32 = cm(440);
+const FLOOR_X: i32 = cm(760);
+const FLOOR_Z: i32 = cm(580);
 /// Nearest a unit comes to its own side's edge of the middle line.
-const MIDDLE: i32 = cm(170);
+const MIDDLE: i32 = cm(230);
 /// Nearest two units stand to one another between turns.
-const APART: i32 = cm(170);
+const APART: i32 = cm(230);
 /// Furthest a unit jogs from one turn to the next, and rolls on a Dodge.
-const STRIDE: i32 = cm(320);
-const ROLL: i32 = cm(270);
+const STRIDE: i32 = cm(420);
+const ROLL: i32 = cm(340);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub struct Beat {
@@ -170,8 +170,8 @@ pub struct Show {
 /// on the right; slot 0 at the back, slot 2 at the front; the middle slot a
 /// step nearer the middle, as the tiles beside the stage are.
 pub fn home(side: usize, slot: usize) -> V3 {
-    let x = if slot == 1 { cm(330) } else { cm(420) };
-    let z = cm(230) * (slot as i32 - 1);
+    let x = if slot == 1 { cm(450) } else { cm(570) };
+    let z = cm(320) * (slot as i32 - 1);
     v3(if side == 0 { -x } else { x }, 0, z)
 }
 
@@ -260,9 +260,9 @@ fn plan_spots(record: &Record, kinds: &[Vec<Kind>; 2]) -> Vec<[Vec<V3>; 2]> {
                 }
                 let p = prev[side][slot];
                 let want = if actor && turn.act == Act::Skill && turn.effect == Some(Effect::Dodge) {
-                    let way = if p.z > cm(150) {
+                    let way = if p.z > cm(200) {
                         -ONE
-                    } else if p.z < -cm(150) || rng.chance(50) {
+                    } else if p.z < -cm(200) || rng.chance(50) {
                         ONE
                     } else {
                         -ONE
@@ -271,15 +271,15 @@ fn plan_spots(record: &Record, kinds: &[Vec<Kind>; 2]) -> Vec<[Vec<V3>; 2]> {
                 } else {
                     let foe = lineup(record, i, side, slot, &prev);
                     let reach = match kinds[side][slot] {
-                        Kind::Melee => rng.range(320, 440),
-                        Kind::Magic => rng.range(540, 680),
-                        Kind::Ranged => rng.range(620, 780),
+                        Kind::Melee => rng.range(380, 520),
+                        Kind::Magic => rng.range(680, 860),
+                        Kind::Ranged => rng.range(780, 980),
                     };
                     let a = deg(rng.range(-50, 50));
                     let dir = v3(fx::mul(fx::cos(a), own(side)), 0, fx::sin(a));
                     let w = prev[1 - side][foe].add(dir.scale(cm(reach)));
                     // keep to a lane of its own across the floor, loosely
-                    let lane = cm(250) * (slot as i32 - 1) + cm(rng.range(-90, 90));
+                    let lane = cm(340) * (slot as i32 - 1) + cm(rng.range(-110, 110));
                     let w = v3(w.x, 0, (w.z + lane) / 2);
                     p.add(w.sub(p).clamp_len(STRIDE))
                 };
@@ -288,7 +288,7 @@ fn plan_spots(record: &Record, kinds: &[Vec<Kind>; 2]) -> Vec<[Vec<V3>; 2]> {
             }
         }
         // nobody ends a jog standing in anybody
-        for _ in 0..3 {
+        for _ in 0..6 {
             for &(s, k) in &moved {
                 let mut p = next[s][k];
                 for (s2, row) in next.iter().enumerate() {
@@ -435,7 +435,7 @@ impl Show {
         // the fighting floor, a raised disc
         b.inked(
             Mesh::Cyl,
-            &render::boxed(v3(0, cm(3), 0), v3(fx::int(13), cm(6), fx::int(10))),
+            &render::boxed(v3(0, cm(3), 0), v3(fx::int(18), cm(6), fx::int(14))),
             hex(&p.floor),
             0,
         );
@@ -974,15 +974,15 @@ impl Show {
         }
         // the camera: the whole stage, drifting, leaning in on the action
         let drift = fx::mul(deg(9), fx::sin(fx::TURN * (t % 16000) / 16000));
-        let centre = v3(0, cm(60), cm(80));
+        let centre = v3(0, cm(60), -cm(60));
         let look_at = centre.lerp(focus.add(v3(0, cm(60), 0)), focus_w / 2);
-        // far enough back that the whole floor fits a narrow stage
+        // far enough back that everyone standing fits a narrow stage
         let tan_half_fov = ONE * 364 / 1000;
-        let fit = fx::div(cm(780), fx::mul(tan_half_fov, aspect.max(ONE / 2))) - fx::int(2);
-        let base = fit.clamp(fx::int(13), fx::int(24));
+        let fit = fx::div(cm(990), fx::mul(tan_half_fov, aspect.max(ONE / 2))) - fx::int(2);
+        let base = fit.clamp(fx::int(15), fx::int(27));
         let dist = base - fx::mul(cm(250), focus_w);
         let height = fx::mul(cm(640), fx::div(base, fx::int(13)));
-        let side_lean = fx::mul(cm(150), focus_w) * actor_side_sign;
+        let side_lean = fx::mul(cm(70), focus_w) * actor_side_sign;
         let eye = look_at.add(v3(
             fx::mul(fx::sin(drift), dist) + side_lean,
             height,

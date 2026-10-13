@@ -253,8 +253,10 @@ details label { display: block; margin-top: 8px; font-weight: 700; font-size: 0.
 #battle { max-width: 1400px; }
 .arena {
   position: relative; border: var(--line) solid var(--ink); border-radius: var(--radius); overflow: hidden;
-  display: grid; grid-template-columns: minmax(200px, 270px) 1fr minmax(200px, 270px); align-items: center;
-  gap: 12px; padding: 14px; box-shadow: 0 6px 0 var(--ink); background: var(--wall); min-height: 520px;
+  display: grid; grid-template-columns: minmax(190px, 250px) 1fr minmax(190px, 250px); align-items: center;
+  gap: 12px; padding: 14px; box-shadow: 0 6px 0 var(--ink); background: var(--wall);
+  /* taller on a taller window, so the stage has room, but kept wider than tall */
+  min-height: clamp(520px, calc(100vh - 220px), 680px);
 }
 .backdrop { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; filter: saturate(0.85); }
 .stage-wrap {

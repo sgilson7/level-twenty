@@ -20,6 +20,8 @@
 
 > the statement "and somebody's crew wants the corner." has heavy connotations attached to drug dealing, remove any such connotation from the game
 
+> ok now make the battle space a little larger, its now a bit crowded in there
+
 ## The game
 
 A browser auto battler. A player fields a crew of three; fights play themselves, three against three, and the player watches, then spends what the fight paid. Played with a mouse or a finger, on a laptop or a phone.
