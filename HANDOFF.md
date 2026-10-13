@@ -38,7 +38,7 @@ Sam asked that the Market Street line "somebody's crew wants the corner" go, alo
 
 - Market Street's blurb now reads "...and the whole street has come out for the fair."
 - The first stage "The Corner Store" is now "The Fruit Stall", so no "corner" is left in the game.
-- Random's "Deal again" button and the help line "Random deals two crews" now say "Draw" (the listing on sgilson7.github.io likewise).
+- Random's "Deal again" button and the help line "Random deals two crews" now say "Draw". The website listing's "Random mode deals two crews" is changed to "draws" in the website source (commit `0f1cbe4`) but **not published**: the website's `make check` fails on a missing `/materials/csc484-ai-literacy-game-dev.pptx` (not this work), and its working tree holds uncommitted Surfs Up edits that a publish would ship. Sam publishes it with `make deploy` once those are settled.
 - Smog Sage's blurb no longer "breathes in the city's smoke"; it now "gathers up the city's smog and sends it rolling back at you".
 
 "Crew" stays: on its own it reads as a team. Whether any other word should go is Sam's call.
