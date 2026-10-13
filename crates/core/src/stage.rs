@@ -778,6 +778,31 @@ impl Show {
                 figure::draw(&mut b, look, kind, at, yaw, &pose);
                 let standing = figure::height(look) + cm(30);
                 let top = at.add(v3(0, standing - fx::mul(standing * 4 / 5, pose.down), 0));
+                // whose side it is on: a ring of its team's colour at its
+                // feet and a marker over its head, as FF13 marks friend and foe
+                if pose.down < ONE / 2 {
+                    let team = TEAM[side];
+                    b.push(
+                        Mesh::Cyl,
+                        &render::boxed(at.add(v3(0, cm(6), 0)), v3(cm(130), cm(4), cm(130))),
+                        team,
+                        ONE / 3,
+                        render::PASS_SOLID,
+                    );
+                    b.inked(
+                        Mesh::Ring,
+                        &render::boxed(at.add(v3(0, cm(10), 0)), v3(cm(170), cm(16), cm(170))),
+                        team,
+                        ONE / 3,
+                    );
+                    let bob = fx::mul(cm(8), fx::sin(fx::TURN * ((t + 300 * slot as i32) % 1400) / 1400));
+                    let spin = fx::TURN * (t % 3000) / 3000;
+                    let over = top.add(v3(0, cm(45) + bob, 0));
+                    let a = Affine::translate(over)
+                        .then(&Affine::rot_y(spin))
+                        .then(&Affine::scale(v3(cm(30), cm(44), cm(30))));
+                    b.inked(Mesh::Octa, &a, team, ONE / 3);
+                }
                 // a stunned unit has stars round its head
                 if st.stunned && st.alive {
                     for k in 0..3 {
@@ -993,6 +1018,11 @@ const HEAL: Rgb = [ONE * 120 / 255, ONE * 230 / 255, ONE * 110 / 255];
 const HASTE: Rgb = [ONE * 80 / 255, ONE * 170 / 255, ONE];
 const SLOW: Rgb = [ONE * 170 / 255, ONE * 90 / 255, ONE];
 const DODGE: Rgb = [ONE * 120 / 255, ONE * 240 / 255, ONE * 235 / 255];
+/// The two sides' colours, the same as their tiles: blue for you, red for the foe.
+const TEAM: [Rgb; 2] = [
+    [ONE * 60 / 255, ONE * 140 / 255, ONE * 235 / 255],
+    [ONE * 225 / 255, ONE * 55 / 255, ONE * 50 / 255],
+];
 const DUST: Rgb = [ONE * 230 / 255, ONE * 215 / 255, ONE * 190 / 255];
 
 // ---- scenery ----------------------------------------------------------------
@@ -1452,6 +1482,38 @@ mod tests {
             }
             assert!(f.values.len() / render::INSTANCE_VALUES > 150);
             assert_eq!(f.draws.len() % render::DRAW_VALUES, 0);
+        }
+    }
+
+    #[test]
+    fn every_standing_unit_wears_its_own_sides_colour_and_never_the_other() {
+        let s = show(4);
+        for t in [0, s.total() / 2] {
+            let f = s.frame(t, ONE * 16 / 9);
+            let (_, states) = s.state_at(t);
+            for side in 0..2 {
+                let worn: Vec<V3> = f
+                    .values
+                    .chunks(render::INSTANCE_VALUES)
+                    .filter(|v| v[12..15] == TEAM[side])
+                    .map(|v| v3(v[3], v[7], v[11]))
+                    .collect();
+                for (slot, st) in states[side].iter().enumerate() {
+                    let at = s.motion(side, slot, t).at;
+                    let near = |p: &V3| v3(p.x - at.x, 0, p.z - at.z).dist(v3(0, 0, 0)) < cm(20);
+                    let n = worn.iter().filter(|p| near(p)).count();
+                    if st.alive {
+                        assert_eq!(n, 3, "side {side} slot {slot} at {t}");
+                    }
+                    let other = s.motion(1 - side, slot, t).at;
+                    assert!(
+                        !worn
+                            .iter()
+                            .any(|p| v3(p.x - other.x, 0, p.z - other.z).dist(v3(0, 0, 0)) < cm(20)),
+                        "side {side} colour on the other side's slot {slot}"
+                    );
+                }
+            }
         }
     }
 

@@ -12,6 +12,9 @@
   --sage: #8dbb7e;
   --sagedark: #5e9c6a;
   --gold: #ffb000;
+  /* the two sides, the same colours as their rings on the 3D stage (stage.rs, TEAM) */
+  --team-mine: #3c8ceb;
+  --team-foe: #e13732;
   --melee: #e0483e;
   --melee-soft: #f6b3a4;
   --magic: #8a5bd6;
@@ -278,15 +281,17 @@ details label { display: block; margin-top: 8px; font-weight: 700; font-size: 0.
   border: 3px solid var(--ink); border-radius: 10px; box-shadow: 0 4px 0 var(--ink); animation: pop 0.25s ease-out;
   text-shadow: 1px 1px 0 var(--ink);
 }
-.callout.mine { background: var(--magic); }
-.callout.foe { background: var(--bad); }
+.callout.mine { background: var(--team-mine); }
+.callout.foe { background: var(--team-foe); }
 .side { position: relative; z-index: 2; display: grid; gap: 10px; min-width: 0; }
 .side.foe { justify-items: end; }
 .side-label {
   font-weight: 900; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.08em;
-  background: var(--ink); color: var(--paper); border-radius: 999px; padding: 1px 12px; justify-self: start;
+  background: var(--team-mine); color: #fff; border: 2px solid var(--ink); border-radius: 999px; padding: 1px 12px; justify-self: start;
 }
-.side.foe .side-label { justify-self: end; background: var(--bad); }
+.side.foe .side-label { justify-self: end; background: var(--team-foe); }
+.side.mine .fighter { border-left: 8px solid var(--team-mine); }
+.side.foe .fighter { border-right: 8px solid var(--team-foe); }
 .side.foe .fighter { background: #fde3d8; }
 .fighter {
   position: relative; display: grid; grid-template-columns: 58px 1fr; grid-template-rows: auto auto auto auto auto;

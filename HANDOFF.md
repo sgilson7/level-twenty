@@ -28,6 +28,7 @@ Checks for this round are in the table below, marked "round 2".
 - **Fighters keep moving**, after Final Fantasy XIII (P17): between turns everyone not being hit jogs to a new spot lined up on the foe it will hit next, ranged and magic strafe as they shoot, and the camera fits the whole floor.
 - **Dodge and Flank** (P18): new skills for nine units. Dodge: a hit, then the next blow on the caster misses. Flank: a run to the target's side, and the hit counts as strong. Online protocol is now 3.
 - **Crew from the campaign** (P19).
+- **Team colours on the stage** (P20): blue rings and diamonds for your crew, red for the foe, matching stripes on the tiles. The online protocol is unchanged: only drawing changed.
 
 Checks for this round are marked "round 3".
 
@@ -47,6 +48,7 @@ Checks for this round are marked "round 3".
 | round 2: `./scripts/check.sh` (local, three engines) | BUILDER CHECK PASSED: browser check (now also "the 3D stage drew the fight" and the skill picker) and the two-browser online check in Chromium, Firefox and WebKit |
 | round 3: `cargo test --workspace` | 93 unit tests (new: Dodge, Flank, nobody jumps or leaves the floor, units keep moving and never stand in each other, a flank strikes from the side, a dodged blow finds its target stepped aside, a Dodge rolls clear), 12 boundary tests, 1 campaign probe (41 to 54 fights): all pass |
 | round 3: `./scripts/check.sh` (local, three engines) | BUILDER CHECK PASSED, with the new browser checks (no tile under the stage; the crew screen opens from the campaign and Back returns there) |
+| round 3, team colours: `./scripts/check.sh` (local, three engines) | BUILDER CHECK PASSED, with the new unit test that every standing unit wears its own side's colour and never the other's |
 | round 3: CI on `main` (commit `c9f48e3`), then the browser check against the live site | CI check and deploy: success. Live: BROWSER CHECK PASSED in Chromium, Firefox and WebKit, including the round-3 checks |
 | `cargo mutants -p lt_core` (on the first commit, before the online fix) | 540 mutants in 25 min: 351 caught, 156 missed, 18 unviable, 15 timeouts. Not part of `check.sh` |
 

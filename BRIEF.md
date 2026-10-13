@@ -14,6 +14,8 @@
 
 > the movement, look at final fantasy 13 for a good example
 
+> its hard to tell which team each character is on as they are fighting as they move now
+
 ## The game
 
 A browser auto battler. A player fields a crew of three; fights play themselves, three against three, and the player watches, then spends what the fight paid. Played with a mouse or a finger, on a laptop or a phone.
