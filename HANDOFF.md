@@ -47,6 +47,7 @@ Checks for this round are marked "round 3".
 | round 2: `./scripts/check.sh` (local, three engines) | BUILDER CHECK PASSED: browser check (now also "the 3D stage drew the fight" and the skill picker) and the two-browser online check in Chromium, Firefox and WebKit |
 | round 3: `cargo test --workspace` | 93 unit tests (new: Dodge, Flank, nobody jumps or leaves the floor, units keep moving and never stand in each other, a flank strikes from the side, a dodged blow finds its target stepped aside, a Dodge rolls clear), 12 boundary tests, 1 campaign probe (41 to 54 fights): all pass |
 | round 3: `./scripts/check.sh` (local, three engines) | BUILDER CHECK PASSED, with the new browser checks (no tile under the stage; the crew screen opens from the campaign and Back returns there) |
+| round 3: CI on `main` (commit `c9f48e3`), then the browser check against the live site | CI check and deploy: success. Live: BROWSER CHECK PASSED in Chromium, Firefox and WebKit, including the round-3 checks |
 | `cargo mutants -p lt_core` (on the first commit, before the online fix) | 540 mutants in 25 min: 351 caught, 156 missed, 18 unviable, 15 timeouts. Not part of `check.sh` |
 
 ## Waiting on Sam
