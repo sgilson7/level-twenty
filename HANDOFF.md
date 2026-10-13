@@ -32,7 +32,8 @@ Checks for this round are in the table below, marked "round 2".
 | `BUILDER_ORIGIN=https://sgilson7.github.io/level-twenty tests/browser/check.py` | first run FAILED "every portrait loaded" in all three engines (pictures still loading, no 404); after preloading and a waiting check, PASSED in Chromium, Firefox and WebKit |
 | Room code against the live site, two Chromium browsers through the public relays and STUN | met in 1.3 s; one fight, one Victory and one Defeat; no console error |
 | Website `make check`, `make packet`, `make gate`, then `make deploy` and `make gate-live` | all passed |
-| Website `testing/engines.py`, Level Twenty alone, live | drew in Chromium, Firefox and WebKit |
+| Website `testing/engines.py`, Level Twenty alone, live | drew in Chromium, Firefox and WebKit (both rounds) |
+| round 2: live browser check, and the website listing (`make check`, `packet`, `gate`, `deploy`, `gate-live`) | passed; the listing describes the stage and skills, with a new tile and clip of the 3D stage |
 | round 2: `cargo test --workspace` | 86 unit tests (skills, Mend, Slow, figures, stage timeline, choreography, camera marks, scenery), 12 boundary tests, 1 campaign probe: all pass. Campaign probe with enemies on their best skills: 41 to 54 fights |
 | round 2: `./scripts/check.sh` (local, three engines) | BUILDER CHECK PASSED: browser check (now also "the 3D stage drew the fight" and the skill picker) and the two-browser online check in Chromium, Firefox and WebKit |
 | `cargo mutants -p lt_core` (on the first commit, before the online fix) | 540 mutants in 25 min: 351 caught, 156 missed, 18 unviable, 15 timeouts. Not part of `check.sh` |
