@@ -413,6 +413,21 @@ function wireOnline() {
 
 // ---- start -----------------------------------------------------------------
 
+// Fetch every picture once, after the menu is up, so a portrait or backdrop
+// is already in the cache when a screen first draws it.
+const warm = [];
+function preload(unitsText, campaignText) {
+  const paths = ["art/triangle.png"];
+  for (const u of JSON.parse(unitsText).units) paths.push(portrait(u.id));
+  for (const k of ["melee", "magic", "ranged"]) paths.push(kindIcon(k));
+  for (const ch of JSON.parse(campaignText).chapters) paths.push(backdropArt(ch.backdrop));
+  for (const p of paths) {
+    const i = new Image();
+    i.src = p;
+    warm.push(i);
+  }
+}
+
 async function text(path) {
   const r = await fetch(path);
   if (!r.ok) throw new Error(path + " " + r.status);
@@ -456,6 +471,7 @@ async function start() {
   });
   wireOnline();
   renderMenu();
+  preload(units, campaign);
   document.body.dataset.ready = "true";
 }
 

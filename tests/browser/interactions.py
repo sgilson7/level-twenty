@@ -19,10 +19,17 @@ COPY = json.loads((ROOT / "data" / "copy.json").read_text())
 
 
 def images_loaded(page, scope):
-    return page.evaluate(
-        "(sel) => [...document.querySelectorAll(sel + ' img')].filter(i => i.getAttribute('src')).every(i => i.complete && i.naturalWidth > 0)",
-        scope,
-    )
+    """Every picture in scope has loaded, waiting up to ten seconds: against
+    the live site a picture may still be on its way when the screen draws."""
+    for _ in range(50):
+        done = page.evaluate(
+            "(sel) => [...document.querySelectorAll(sel + ' img')].filter(i => i.getAttribute('src')).every(i => i.complete && i.naturalWidth > 0)",
+            scope,
+        )
+        if done:
+            return True
+        page.wait_for_timeout(200)
+    return False
 
 
 def run(page, check, engine):
