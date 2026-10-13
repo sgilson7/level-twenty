@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Reference default, widened by one word as in Ribbit King and Raiders of
+       the Lost Mart: connect-src also allows secure WebSockets, the public
+       relays that introduce two browsers online (web/net/). Nothing opens
+       one until a person hosts or joins by room code. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self' wss:; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Level Twenty</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-ready="false" data-mode="loading">
+  <p id="loading" class="loading" data-copy="loading"></p>
+
+  <!-- Menu -->
+  <section id="menu" class="screen" hidden>
+    <div class="hero">
+      <img src="art/title.png" alt="" class="hero-art">
+      <div class="hero-text">
+        <h1 data-copy="title"></h1>
+        <p data-copy="tagline"></p>
+      </div>
+    </div>
+    <div class="menu-body">
+      <div class="account card">
+        <div class="account-row">
+          <span class="badge big" id="m-level"></span>
+          <div class="grow">
+            <div class="label"><span data-copy="account"></span> <span id="m-xp" class="muted"></span></div>
+            <div class="bar xp"><i id="m-xpbar"></i></div>
+            <div id="m-next" class="muted small"></div>
+          </div>
+        </div>
+        <div id="m-record" class="muted small"></div>
+      </div>
+      <div class="menu-team card">
+        <div class="label" data-copy="your_team"></div>
+        <div id="m-team" class="mini-team"></div>
+      </div>
+      <nav class="menu-buttons">
+        <button id="b-campaign" class="big-button"><b data-copy="menu_campaign"></b><span data-copy="menu_campaign_sub"></span></button>
+        <button id="b-random" class="big-button"><b data-copy="menu_random"></b><span data-copy="menu_random_sub"></span></button>
+        <button id="b-online" class="big-button"><b data-copy="menu_online"></b><span data-copy="menu_online_sub"></span></button>
+        <button id="b-roster" class="big-button"><b data-copy="menu_roster"></b><span data-copy="menu_roster_sub"></span></button>
+      </nav>
+      <div class="menu-foot">
+        <button id="b-help" class="link" data-copy="menu_help"></button>
+        <button id="b-reset" class="link" data-copy="reset"></button>
+        <a id="source" class="link" data-copy="source"></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Crew -->
+  <section id="roster" class="screen" hidden>
+    <header class="bar-head">
+      <button class="back" data-copy="back"></button>
+      <h2 data-copy="menu_roster"></h2>
+    </header>
+    <div class="roster-team card">
+      <div id="r-slots" class="slots"></div>
+      <p id="r-hint" class="muted small" data-copy="pick_slot"></p>
+      <p id="r-error" class="error small" role="status"></p>
+    </div>
+    <div class="roster-body">
+      <div id="r-grid" class="grid"></div>
+      <aside id="r-detail" class="detail card"></aside>
+    </div>
+  </section>
+
+  <!-- Campaign -->
+  <section id="campaign" class="screen" hidden>
+    <header class="bar-head">
+      <button class="back" data-copy="back"></button>
+      <h2 data-copy="menu_campaign"></h2>
+    </header>
+    <div id="c-tabs" class="tabs"></div>
+    <div id="c-chapter" class="chapter"></div>
+    <p id="c-error" class="error small" role="status"></p>
+  </section>
+
+  <!-- Online -->
+  <section id="online" class="screen" hidden>
+    <header class="bar-head">
+      <button class="back" id="o-back" data-copy="back"></button>
+      <h2 data-copy="online_title"></h2>
+    </header>
+    <div class="online-body">
+      <p class="muted" data-copy="online_intro"></p>
+      <div id="o-start" class="card">
+        <button id="o-host" class="primary" data-copy="online_host"></button>
+        <div class="join-row">
+          <label for="o-code" data-copy="online_code_label"></label>
+          <input id="o-code" autocomplete="off" spellcheck="false" maxlength="12">
+          <button id="o-join" data-copy="online_join"></button>
+        </div>
+        <p id="o-error" class="error small" role="status"></p>
+      </div>
+      <div id="o-room" class="card" hidden>
+        <p class="room-code" id="o-roomcode"></p>
+        <p class="muted small" id="o-share" data-copy="online_share"></p>
+        <p id="o-status" class="status" role="status"></p>
+        <div class="vs">
+          <div><div class="label" data-copy="your_team"></div><div id="o-mine" class="mini-team"></div></div>
+          <div><div class="label" data-copy="online_foe"></div><div id="o-foe" class="mini-team"></div></div>
+        </div>
+        <p id="o-fights" class="muted small"></p>
+        <div class="row">
+          <button id="o-fight" class="primary" data-copy="online_fight"></button>
+          <button id="o-leave" data-copy="online_leave"></button>
+        </div>
+      </div>
+      <details id="o-paste" class="card">
+        <summary data-copy="online_paste"></summary>
+        <div id="o-paste-host">
+          <p class="muted small" data-copy="online_paste_host_help"></p>
+          <button id="o-new-invite" data-copy="online_new_invite"></button>
+          <label for="o-invite-out" data-copy="online_invite_out"></label>
+          <textarea id="o-invite-out" readonly></textarea>
+          <label for="o-reply-in" data-copy="online_reply_in"></label>
+          <textarea id="o-reply-in"></textarea>
+          <button id="o-accept" data-copy="online_accept"></button>
+        </div>
+        <div id="o-paste-join">
+          <p class="muted small" data-copy="online_paste_join_help"></p>
+          <label for="o-invite-in" data-copy="online_invite_in"></label>
+          <textarea id="o-invite-in"></textarea>
+          <button id="o-make-reply" data-copy="online_make_reply"></button>
+          <label for="o-reply-out" data-copy="online_reply_out"></label>
+          <textarea id="o-reply-out" readonly></textarea>
+        </div>
+        <p id="o-paste-error" class="error small" role="status"></p>
+      </details>
+    </div>
+  </section>
+
+  <!-- Battle -->
+  <section id="battle" class="screen" hidden>
+    <div class="arena" id="arena">
+      <img id="backdrop" class="backdrop" alt="">
+      <div class="arena-title" id="a-title"></div>
+      <div class="side mine" id="side-0"></div>
+      <div class="side foe" id="side-1"></div>
+      <div class="banner" id="a-banner" hidden></div>
+    </div>
+    <div class="battle-foot">
+      <p id="a-log" class="log" aria-live="polite"></p>
+      <div class="row">
+        <span class="muted small" data-copy="speed"></span>
+        <span id="a-speeds" class="speeds"></span>
+        <button id="a-skip" data-copy="skip"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section id="result" class="screen" hidden>
+    <div class="result card">
+      <h2 id="x-head"></h2>
+      <p id="x-stars" class="stars"></p>
+      <p id="x-first" class="muted small" data-copy="first_clear"></p>
+      <div class="account-row">
+        <span class="badge big" id="x-level"></span>
+        <div class="grow">
+          <div class="label" id="x-account"></div>
+          <div class="bar xp"><i id="x-xpbar"></i></div>
+        </div>
+      </div>
+      <p id="x-levelup" class="levelup"></p>
+      <ul id="x-unlocks" class="unlocks"></ul>
+      <div id="x-units" class="x-units"></div>
+      <p id="x-note" class="muted small"></p>
+      <div class="row">
+        <button id="x-next" class="primary" data-copy="next_stage"></button>
+        <button id="x-again" data-copy="retry"></button>
+        <button id="x-back" data-copy="to_menu"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="help" class="screen" hidden>
+    <header class="bar-head">
+      <button class="back" data-copy="back"></button>
+      <h2 data-copy="help_title"></h2>
+    </header>
+    <div class="help card">
+      <img src="art/triangle.png" alt="" class="triangle">
+      <p data-copy="help_triangle"></p>
+      <p data-copy="help_turns"></p>
+      <p data-copy="help_levels"></p>
+      <p data-copy="help_modes"></p>
+      <p class="muted small" data-copy="credits"></p>
+    </div>
+  </section>
+
+  <noscript><p>This game needs JavaScript and WebAssembly.</p></noscript>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

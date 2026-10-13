@@ -1,0 +1,31 @@
+{
+  "chapters": [
+    {"name": "Market Street", "backdrop": "market",
+     "blurb": "The stalls are open, the signs are humming, and somebody's crew wants the corner.",
+     "stages": [
+       {"name": "The Corner Store", "enemies": [["rook", 1], ["pip", 1], ["vela", 1]]},
+       {"name": "Noodle Stand", "enemies": [["nan", 1], ["rook", 2], ["pip", 2]]},
+       {"name": "Under the Sign", "enemies": [["vela", 2], ["ed", 2], ["static", 2]]},
+       {"name": "Bottle Alley", "enemies": [["pip", 3], ["june", 3], ["rook", 3]]},
+       {"name": "The Big Sale", "enemies": [["chum", 4], ["nan", 4], ["vela", 4]]}
+     ]},
+    {"name": "The Rooftops", "backdrop": "rooftops",
+     "blurb": "Water tanks, antennas and air conditioners, and a crew that flies between them.",
+     "stages": [
+       {"name": "Antenna Garden", "enemies": [["static", 6], ["dee", 5], ["ed", 6]]},
+       {"name": "Water Tower", "enemies": [["june", 7], ["sage", 7], ["rook", 6]]},
+       {"name": "Laundry Lines", "enemies": [["biscuit", 8], ["nan", 7], ["pip", 8]]},
+       {"name": "The Billboard", "enemies": [["vela", 9], ["tagger", 9], ["chum", 9]]},
+       {"name": "Pigeon King", "enemies": [["dee", 10], ["june", 10], ["static", 10]]}
+     ]},
+    {"name": "Chum's Junkyard", "backdrop": "junkyard",
+     "blurb": "Where the city's scrap goes, and where the mech cat sleeps on top of it.",
+     "stages": [
+       {"name": "Scrap Gate", "enemies": [["ed", 11], ["sage", 10], ["tagger", 10]]},
+       {"name": "Tyre Mountain", "enemies": [["biscuit", 12], ["dee", 12], ["nan", 12]]},
+       {"name": "Crusher", "enemies": [["chum", 14], ["static", 14], ["june", 14]]},
+       {"name": "The Kennel", "enemies": [["biscuit", 14], ["rook", 14], ["sage", 14]]},
+       {"name": "Chum Wakes Up", "enemies": [["chum", 20], ["nan", 19], ["tagger", 19]]}
+     ]}
+  ]
+}

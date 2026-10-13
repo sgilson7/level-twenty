@@ -1,0 +1,223 @@
+\documentclass[tikz,border=0pt]{standalone}
+\usepackage{xcolor}
+\usetikzlibrary{calc}
+% Palette: Sam_Comm_final.png by eye, and the drones and raiders.
+\definecolor{ink}{HTML}{3B2340}
+\definecolor{sky}{HTML}{EFC46A}
+\definecolor{skyhi}{HTML}{F5DA92}
+\definecolor{skylow}{HTML}{E9B060}
+\definecolor{cloud}{HTML}{F2D58A}
+\definecolor{paper}{HTML}{FBEFD0}
+\definecolor{cream}{HTML}{FFF6E0}
+\definecolor{white}{HTML}{FFFFFF}
+\definecolor{wallA}{HTML}{E88A73}
+\definecolor{wallB}{HTML}{EE9F7E}
+\definecolor{wallC}{HTML}{E47A7E}
+\definecolor{wallD}{HTML}{F0B07E}
+\definecolor{wallE}{HTML}{D9765F}
+\definecolor{wallF}{HTML}{E99A8A}
+\definecolor{greenA}{HTML}{8DBB7E}
+\definecolor{greenB}{HTML}{6FA77A}
+\definecolor{greenC}{HTML}{A9C97F}
+\definecolor{greenD}{HTML}{5E9C6A}
+\definecolor{greenE}{HTML}{4A8060}
+\definecolor{sage}{HTML}{9DB98A}
+\definecolor{sagedark}{HTML}{6F8F66}
+\definecolor{sagelight}{HTML}{C2D6A6}
+\definecolor{window}{HTML}{F6E7A0}
+\definecolor{windark}{HTML}{8C5A64}
+\definecolor{metal}{HTML}{8D9A93}
+\definecolor{metaldark}{HTML}{5E6B66}
+\definecolor{metallight}{HTML}{B9C4BC}
+\definecolor{wood}{HTML}{B9835A}
+\definecolor{wooddark}{HTML}{8C5A3C}
+\definecolor{woodlight}{HTML}{D9A66F}
+\definecolor{stone}{HTML}{E7C9A0}
+\definecolor{stonedark}{HTML}{C9A47E}
+\definecolor{concrete}{HTML}{D8C3A4}
+\definecolor{concretedark}{HTML}{B8A084}
+\definecolor{asphalt}{HTML}{8E7A86}
+\definecolor{asphaltdark}{HTML}{6E5C68}
+\definecolor{roadline}{HTML}{F6E7A0}
+\definecolor{kerb}{HTML}{D8B48C}
+\definecolor{red}{HTML}{E0483E}
+\definecolor{redlight}{HTML}{F27A6A}
+\definecolor{gold}{HTML}{FFB000}
+\definecolor{goldlight}{HTML}{FFD54F}
+\definecolor{teal}{HTML}{4FA3A0}
+\definecolor{tealdark}{HTML}{3C8582}
+\definecolor{magenta}{HTML}{FF2E88}
+\definecolor{cyan}{HTML}{13CFE3}
+\definecolor{violet}{HTML}{8A5BD6}
+\definecolor{orange}{HTML}{F2803A}
+\definecolor{pink}{HTML}{F48FB1}
+\definecolor{glow}{HTML}{4FE6E0}
+\definecolor{glowhi}{HTML}{C8FFF9}
+\definecolor{hot}{HTML}{FF6A1A}
+\definecolor{hothi}{HTML}{FFD07A}
+\definecolor{armour}{HTML}{7E7A86}
+\definecolor{armourdark}{HTML}{5A5466}
+\definecolor{armourlight}{HTML}{A8A2B0}
+\definecolor{wasp}{HTML}{E0A82E}
+\definecolor{waspdark}{HTML}{B07E1A}
+\definecolor{moth}{HTML}{F2E6C8}
+\definecolor{mothdark}{HTML}{D2C09A}
+\definecolor{hornet}{HTML}{3C8582}
+\definecolor{hornetdark}{HTML}{2C6260}
+\definecolor{warden}{HTML}{E47A7E}
+\definecolor{wardendark}{HTML}{B85A62}
+\definecolor{tick}{HTML}{8DBB7E}
+\definecolor{tickdark}{HTML}{5E8A5A}
+\definecolor{strider}{HTML}{D9765F}
+\definecolor{striderdark}{HTML}{A8543F}
+\definecolor{queen}{HTML}{7E5C94}
+\definecolor{queendark}{HTML}{4C3A60}
+\definecolor{jacket}{HTML}{6FA77A}
+\definecolor{jacketb}{HTML}{4FA3A0}
+\definecolor{jacketc}{HTML}{E88A73}
+\definecolor{jacketd}{HTML}{F0B07E}
+\definecolor{skin}{HTML}{F2C49A}
+\definecolor{skinb}{HTML}{C98C6A}
+\definecolor{skinc}{HTML}{8C5A3C}
+\definecolor{hair}{HTML}{3B2340}
+\definecolor{goo}{HTML}{B6E35A}
+\definecolor{goodark}{HTML}{7FB23A}
+\definecolor{melee}{HTML}{E0483E}
+\definecolor{meleesoft}{HTML}{F6B3A4}
+\definecolor{magic}{HTML}{8A5BD6}
+\definecolor{magicsoft}{HTML}{CDB6F0}
+\definecolor{ranged}{HTML}{2F9A8A}
+\definecolor{rangedsoft}{HTML}{A6DCCF}
+\definecolor{chum}{HTML}{6FB07A}
+\definecolor{chumdark}{HTML}{4E8A5E}
+\definecolor{chumlight}{HTML}{A8D49A}
+\definecolor{poodle}{HTML}{F6DDB0}
+\definecolor{poodledark}{HTML}{E2BF86}
+\definecolor{hairA}{HTML}{3B2340}
+\definecolor{hairB}{HTML}{6E3F2C}
+\definecolor{hairC}{HTML}{C9C2CF}
+\definecolor{hairD}{HTML}{D9A04A}
+\definecolor{lips}{HTML}{C25A5A}
+\newcommand{\Ink}{1.5pt}
+\tikzset{inked/.style={draw=ink, line width=\Ink, line join=round, line cap=round}}
+\begin{document}
+\begin{tikzpicture}
+\clip (0,0) rectangle (6,6);
+\fill[rangedsoft!55!sky] (0,0) rectangle (6,6);
+\fill[skyhi] (0,4.2) rectangle (6,6);
+\fill[rangedsoft] (0,0) rectangle (6,1.5);
+\filldraw[inked,fill=cloud] (0.887,5.443) circle (0.248);
+\filldraw[inked,fill=cloud] (1.134,5.555) circle (0.315);
+\filldraw[inked,fill=cloud] (1.427,5.6) circle (0.36);
+\filldraw[inked,fill=cloud] (1.719,5.51) circle (0.27);
+\filldraw[inked,fill=cloud] (1.944,5.42) circle (0.203);
+\fill[cloud] (0.887,5.375) rectangle (1.944,5.465);
+\draw[ink, line width=1.5pt, line cap=round] (0.774,5.375) -- (2.057,5.375);
+\filldraw[inked,fill=cloud] (4.278,4.542) circle (0.176);
+\filldraw[inked,fill=cloud] (4.454,4.622) circle (0.224);
+\filldraw[inked,fill=cloud] (4.662,4.654) circle (0.256);
+\filldraw[inked,fill=cloud] (4.87,4.59) circle (0.192);
+\filldraw[inked,fill=cloud] (5.03,4.526) circle (0.144);
+\fill[cloud] (4.278,4.494) rectangle (5.03,4.558);
+\draw[ink, line width=1.5pt, line cap=round] (4.198,4.494) -- (5.11,4.494);
+\filldraw[inked,fill=teal!55!sage] (-0.3,-0.2) rectangle (1.104,2.612);
+\filldraw[inked,fill=teal!55!sage!80!ink] (-0.36,2.612) rectangle (1.164,2.752);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (-0.1,2.062) rectangle (0.18,2.382);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (0.35,2.062) rectangle (0.63,2.382);
+\filldraw[inked,fill=window,line width=0.6pt] (-0.1,1.462) rectangle (0.18,1.782);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (0.35,1.462) rectangle (0.63,1.782);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (-0.1,0.862) rectangle (0.18,1.182);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (0.35,0.862) rectangle (0.63,1.182);
+\filldraw[inked,fill=metallight,line width=0.7pt] (-0.2,1.467) rectangle (0.25,1.817);
+\filldraw[inked,fill=metal,line width=0.5pt] (0.03,1.642) circle (0.11);
+\filldraw[inked,fill=sage] (1.083,-0.2) rectangle (2.517,3.764);
+\filldraw[inked,fill=sage!80!ink] (1.023,3.764) rectangle (2.577,3.904);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (1.283,3.214) rectangle (1.563,3.534);
+\filldraw[inked,fill=window,line width=0.6pt] (1.733,3.214) rectangle (2.013,3.534);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (1.283,2.614) rectangle (1.563,2.934);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (1.733,2.614) rectangle (2.013,2.934);
+\filldraw[inked,fill=window,line width=0.6pt] (1.283,2.014) rectangle (1.563,2.334);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (1.733,2.014) rectangle (2.013,2.334);
+\filldraw[inked,fill=window,line width=0.6pt] (1.283,1.414) rectangle (1.563,1.734);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (1.733,1.414) rectangle (2.013,1.734);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (1.283,0.814) rectangle (1.563,1.134);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (1.733,0.814) rectangle (2.013,1.134);
+\filldraw[inked,fill=metallight,line width=0.7pt] (1.183,2.962) rectangle (1.633,3.312);
+\filldraw[inked,fill=metal,line width=0.5pt] (1.413,3.137) circle (0.11);
+\filldraw[inked,fill=rangedsoft!70!tealdark] (2.614,-0.2) rectangle (3.848,3.123);
+\filldraw[inked,fill=rangedsoft!70!tealdark!80!ink] (2.554,3.123) rectangle (3.908,3.263);
+\filldraw[inked,fill=rangedsoft!70!tealdark!65!windark,line width=0.6pt] (2.814,2.573) rectangle (3.094,2.893);
+\filldraw[inked,fill=window,line width=0.6pt] (3.264,2.573) rectangle (3.544,2.893);
+\filldraw[inked,fill=rangedsoft!70!tealdark!65!windark,line width=0.6pt] (2.814,1.973) rectangle (3.094,2.293);
+\filldraw[inked,fill=rangedsoft!70!tealdark!65!windark,line width=0.6pt] (3.264,1.973) rectangle (3.544,2.293);
+\filldraw[inked,fill=window,line width=0.6pt] (2.814,1.373) rectangle (3.094,1.693);
+\filldraw[inked,fill=rangedsoft!70!tealdark!65!windark,line width=0.6pt] (3.264,1.373) rectangle (3.544,1.693);
+\filldraw[inked,fill=rangedsoft!70!tealdark!65!windark,line width=0.6pt] (2.814,0.773) rectangle (3.094,1.093);
+\filldraw[inked,fill=rangedsoft!70!tealdark!65!windark,line width=0.6pt] (3.264,0.773) rectangle (3.544,1.093);
+\filldraw[inked,fill=teal,line width=0.8pt] (3.598,2.176) rectangle (3.898,3.076);
+\filldraw[inked,fill=teal!55!sage] (3.974,-0.2) rectangle (5.234,2.845);
+\filldraw[inked,fill=teal!55!sage!80!ink] (3.914,2.845) rectangle (5.294,2.985);
+\filldraw[inked,fill=window,line width=0.6pt] (4.174,2.295) rectangle (4.454,2.615);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (4.624,2.295) rectangle (4.904,2.615);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (4.174,1.695) rectangle (4.454,2.015);
+\filldraw[inked,fill=window,line width=0.6pt] (4.624,1.695) rectangle (4.904,2.015);
+\filldraw[inked,fill=window,line width=0.6pt] (4.174,1.095) rectangle (4.454,1.415);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (4.624,1.095) rectangle (4.904,1.415);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (4.174,0.495) rectangle (4.454,0.815);
+\filldraw[inked,fill=teal!55!sage!65!windark,line width=0.6pt] (4.624,0.495) rectangle (4.904,0.815);
+\filldraw[inked,fill=gold,line width=0.8pt] (4.984,1.515) rectangle (5.284,2.415);
+\filldraw[inked,fill=sage] (5.309,-0.2) rectangle (6.92,3.916);
+\filldraw[inked,fill=sage!80!ink] (5.249,3.916) rectangle (6.98,4.056);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (5.509,3.366) rectangle (5.789,3.686);
+\filldraw[inked,fill=window,line width=0.6pt] (5.959,3.366) rectangle (6.239,3.686);
+\filldraw[inked,fill=window,line width=0.6pt] (6.409,3.366) rectangle (6.689,3.686);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (5.509,2.766) rectangle (5.789,3.086);
+\filldraw[inked,fill=window,line width=0.6pt] (5.959,2.766) rectangle (6.239,3.086);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (6.409,2.766) rectangle (6.689,3.086);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (5.509,2.166) rectangle (5.789,2.486);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (5.959,2.166) rectangle (6.239,2.486);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (6.409,2.166) rectangle (6.689,2.486);
+\filldraw[inked,fill=window,line width=0.6pt] (5.509,1.566) rectangle (5.789,1.886);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (5.959,1.566) rectangle (6.239,1.886);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (6.409,1.566) rectangle (6.689,1.886);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (5.509,0.966) rectangle (5.789,1.286);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (5.959,0.966) rectangle (6.239,1.286);
+\filldraw[inked,fill=window,line width=0.6pt] (6.409,0.966) rectangle (6.689,1.286);
+\filldraw[inked,fill=sage!65!windark,line width=0.6pt] (5.509,0.366) rectangle (5.789,0.686);
+\filldraw[inked,fill=window,line width=0.6pt] (5.959,0.366) rectangle (6.239,0.686);
+\filldraw[inked,fill=window,line width=0.6pt] (6.409,0.366) rectangle (6.689,0.686);
+\filldraw[inked,fill=metallight,line width=0.7pt] (5.409,1.185) rectangle (5.859,1.535);
+\filldraw[inked,fill=metal,line width=0.5pt] (5.639,1.36) circle (0.11);
+\draw[ink, line width=0.8pt, line cap=round, line join=round] plot[smooth, tension=0.6] coordinates {(-0.2,4.6) (2,4.1) (4.2,4.3) (6.2,4.75)};
+\filldraw[inked,fill=magenta] plot[smooth cycle, tension=0.8] coordinates {(1.25,3.6) (1.259,3.934) (0.891,3.879) (0.633,4.115) (0.408,3.885) (0.488,3.6) (0.316,3.248) (0.68,3.229) (0.918,3.237) (1.287,3.247)};
+\filldraw[inked,fill=gold] plot[smooth cycle, tension=0.8] coordinates {(5.6,4.2) (5.608,4.496) (5.281,4.448) (5.051,4.657) (4.851,4.453) (4.923,4.2) (4.77,3.887) (5.093,3.87) (5.305,3.877) (5.632,3.886)};
+\filldraw[inked,fill=cyan] plot[smooth cycle, tension=0.8] coordinates {(5.35,1.9) (5.357,2.159) (5.071,2.117) (4.87,2.3) (4.695,2.122) (4.757,1.9) (4.623,1.626) (4.906,1.612) (5.092,1.618) (5.378,1.625)};
+\filldraw[inked,fill=wallF] plot[smooth, tension=0.35] coordinates {(0.65,-0.4) (0.85,1.3) (1.35,2.05) (2.45,2.3) (3.55,2.3) (4.65,2.05) (5.15,1.3) (5.35,-0.4)} -- cycle;
+\filldraw[inked,fill=wallF!80!ink] (1.6,2.3) .. controls (1.4,4.3) and (4.6,4.3) .. (4.4,2.3) -- cycle;
+\filldraw[inked,fill=metal] plot[smooth cycle, tension=0.5] coordinates {(4.337,0.43) (5.017,1.142) (5.317,2.214) (5.157,2.939) (5.342,3.23) (5.643,3.061) (5.883,2.186) (5.583,0.858) (4.863,-0.03)};
+\filldraw[inked,fill=ink!80!metaldark,line width=0.5pt] (4.95,0.6) circle (0.22);
+\filldraw[inked,fill=ink!80!metaldark,line width=0.5pt] (5.45,1.6) circle (0.22);
+\filldraw[inked,fill=ink!80!metaldark,line width=0.5pt] (5.5,2.6) circle (0.22);
+\filldraw[inked,fill=metal] (2.15,4.55) circle (0.38);
+\filldraw[inked,fill=metal] (3.85,4.55) circle (0.38);
+\filldraw[inked,fill=ink!80!metaldark,line width=0.5pt] (2.15,4.55) circle (0.2);
+\filldraw[inked,fill=ink!80!metaldark,line width=0.5pt] (3.85,4.55) circle (0.2);
+\filldraw[inked,fill=metal] (3,3.5) ellipse (1.15 and 1.1);
+\filldraw[inked,fill=ink!80!metaldark] (1.95,3.6) .. controls (2.2,4) and (2.8,3.9) .. (3,3.7) .. controls (3.2,3.9) and (3.8,4) .. (4.05,3.6) .. controls (3.8,3.15) and (3.25,3.25) .. (3,3.4) .. controls (2.75,3.25) and (2.2,3.15) .. cycle;
+\filldraw[inked,fill=metallight] (2.35,3.15) .. controls (2.5,2.4) and (3.5,2.4) .. (3.65,3.15) .. controls (3.3,3.35) and (2.7,3.35) .. cycle;
+\filldraw[inked,fill=white,line width=0.5pt] (2.55,3.58) circle (0.13);
+\filldraw[inked,fill=ink] (2.55,3.56) circle (0.07);
+\filldraw[inked,fill=white,line width=0.5pt] (3.45,3.58) circle (0.13);
+\filldraw[inked,fill=ink] (3.45,3.56) circle (0.07);
+\filldraw[inked,fill=ink] (3,3.02) ellipse (0.14 and 0.09);
+\draw[ink, line width=1pt, line cap=round, line join=round] plot[smooth, tension=0.6] coordinates {(2.8,2.78) (3,2.7) (3.2,2.78)};
+\fill[magenta, opacity=0.3] (1,3.1) circle (0.6);
+\fill[magenta, opacity=0.35] (0.7,3.3) circle (0.35);
+\filldraw[inked,fill=magenta,rounded corners=0.08cm] (1.2,1.4) rectangle (1.75,2.75);
+\filldraw[inked,fill=metallight,line width=0.7pt] (1.3,2.75) rectangle (1.65,2.95);
+\filldraw[inked,fill=ink] (1.38,2.95) rectangle (1.57,3.08);
+\filldraw[inked,fill=white,line width=0.6pt] (1.2,1.8) rectangle (1.75,2.05);
+\filldraw[inked,fill=metal] (1.5,1.4) ellipse (0.3 and 0.255);
+\draw[ink, line width=0.8pt, line cap=round, line join=round] plot[smooth, tension=0.6] coordinates {(1.32,1.49) (1.23,1.58)};
+\end{tikzpicture}
+\end{document}

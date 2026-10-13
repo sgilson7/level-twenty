@@ -1,0 +1,17 @@
+# Plan
+
+Each decision, and the words in the brief it answers. Approved in advance (BRIEF.md, Autonomy).
+
+| # | Decision | Answers |
+| --- | --- | --- |
+| P1 | A fight is decided in full the moment it starts (`battle::fight(teams, seed)`), and the page plays the recorded turns back. Nothing about a fight depends on the page's timing, and the same seed and crews give the same fight on every machine. | "auto battler", "3v3 fights" |
+| P2 | Turns come from an attack bar: every unit's gauge fills by its speed, and the fullest gauge at 1000 acts (ties: side 0, then the lower slot). A unit uses its skill when its cooldown is up and attacks otherwise. | "Kind of like Summoners wars"; speed is one of the three stats |
+| P3 | Three kinds, each strong against one: melee beats ranged, ranged beats magic, magic beats melee. A hit with the edge does 150%, against it 70%. A unit's usual target is an enemy it has the edge over, then the one with least health. | "Melee weak to magic, magic weak to ranged, ranged weak to melee" |
+| P4 | Units have exactly three stats, HP, attack and speed, each a base plus a fixed amount per level, to a cap of 20. No defence stat: the brief names three. | "levels give more stats (attack, hp, speed)", "lvl 20" |
+| P5 | Twelve units, four per kind, each with one skill from eight effects (strike, stun, sweep, heal, drain, snipe, double, haste). Three starters (one of each kind) at account level 1; the other nine unlock one per account level from 2 to 10. | "a level out of combat that determines which units you can use" |
+| P6 | Account XP and unit XP come from fights: the campaign pays both (first clear pays double account XP); random pays the account only, because its units are not yours; online pays both. | "all units have xp and levels" |
+| P7 | The save lives in the browser (`localStorage`), written by the core as JSON and read back by it. A save the core cannot read is a new player, never an error. Levels are clamped and a crew that no longer works is replaced by the starters. | levels must persist to mean anything |
+| P8 | Campaign: three parts of town, five fights each, in order; stars count your units standing at the end. Random: both crews drawn from the whole roster, locked units included, at levels within two of the account level. | "campaign style battle mode, or a completely random game mode" |
+| P9 | Online 1v1 reuses Ribbit King's and Raiders of the Lost Mart's transport (`web/net/`, Trystero over public Nostr relays, or pasted codes) unchanged but for names. Because P1 makes a fight a pure function of two crews and a seed, the browsers swap crews and the host sends a seed and the fight's fingerprint; there is no lockstep or rollback to keep. The joiner sees the same fight from its own seat (`Record::mirrored`) and reports a fingerprint mismatch instead of showing it. | "Could have online 1v1 mode as well" |
+| P10 | Every string a player reads is in `data/copy.json`; unit and campaign text in `data/units.json` and `data/campaign.json`; playback timings in `data/display.json`. The core returns copy keys for errors and every number the page draws, percentages included. | Builder D3, D5 |
+| P11 | Art: TikZ through Raiders' `tools/art.py` and `artlib.py`: twelve portraits, three kind icons, the help triangle, three backdrops and the title. Chum 3000 (the mech cat), Jetpack June and Biscuit (the poodle) and Exo Ed (the sweaty exosuit) come from Sam_Comm_final.png. | "use the tikz latex prompt", "sam comm final as an inspiration image" |
