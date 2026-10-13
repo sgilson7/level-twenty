@@ -63,6 +63,13 @@ def run(page, check, engine):
     page.wait_for_selector("body[data-mode='campaign']", state="attached", timeout=5000)
     check(page.locator("#c-chapter .stage").count() == 5, "the first part of town has five fights")
     check(page.locator("#c-chapter .stage button:disabled").count() == 4, "only the first fight is open")
+    check(page.locator("#c-team .mini").count() == 3, "the campaign shows the crew")
+    page.click("#c-crew")
+    page.wait_for_selector("body[data-mode='roster']", state="attached", timeout=5000)
+    check(True, "the crew screen opens from the campaign")
+    page.click("#roster button.back")
+    page.wait_for_selector("body[data-mode='campaign']", state="attached", timeout=5000)
+    check(True, "and Back returns to the campaign")
     page.click("#c-chapter .stage button >> nth=0")
     page.wait_for_selector("body[data-mode='battle']", state="attached", timeout=5000)
     check(page.locator("#side-0 .fighter").count() == 3 and page.locator("#side-1 .fighter").count() == 3, "three against three")
@@ -74,6 +81,16 @@ def run(page, check, engine):
         drawn = False
     check(drawn, "the 3D stage drew the fight")
     check(page.locator("#f-0-0 .f-skill").inner_text() != "", "each tile names the skill its unit fields")
+    overlap = page.evaluate(
+        """() => {
+          const s = document.querySelector('.stage-wrap').getBoundingClientRect();
+          const mine = [...document.querySelectorAll('#side-0 .fighter')].map(f => f.getBoundingClientRect());
+          const foe = [...document.querySelectorAll('#side-1 .fighter')].map(f => f.getBoundingClientRect());
+          const across = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+          return [...mine, ...foe].filter(r => across(r, s)).length;
+        }"""
+    )
+    check(overlap == 0, f"no tile runs under the 3D stage ({overlap})")
     page.click("#a-speeds .speed >> nth=-1")
     page.wait_for_selector("body[data-mode='result']", state="attached", timeout=90000)
     head = page.inner_text("#x-head")

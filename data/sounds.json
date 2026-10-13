@@ -451,6 +451,82 @@
     "dur": 0.35,
     "gain": 0.18
    }
+  ],
+  "dash": [
+   {
+    "type": "noise",
+    "filter": "lowpass",
+    "freq": 900,
+    "q": 0.8,
+    "at": 0,
+    "attack": 0.03,
+    "dur": 0.12,
+    "gain": 0.22
+   },
+   {
+    "type": "noise",
+    "filter": "lowpass",
+    "freq": 900,
+    "q": 0.8,
+    "at": 0.14,
+    "attack": 0.03,
+    "dur": 0.12,
+    "gain": 0.22
+   },
+   {
+    "type": "noise",
+    "filter": "bandpass",
+    "freq": 2200,
+    "q": 0.9,
+    "at": 0.02,
+    "attack": 0.08,
+    "dur": 0.35,
+    "gain": 0.12
+   }
+  ],
+  "miss": [
+   {
+    "type": "noise",
+    "filter": "bandpass",
+    "freq": 2600,
+    "q": 1.5,
+    "at": 0,
+    "attack": 0.06,
+    "dur": 0.28,
+    "gain": 0.3
+   },
+   {
+    "type": "osc",
+    "wave": "sine",
+    "from": 900,
+    "to": 300,
+    "at": 0,
+    "attack": 0.01,
+    "dur": 0.22,
+    "gain": 0.06
+   }
+  ],
+  "flank": [
+   {
+    "type": "osc",
+    "wave": "triangle",
+    "from": 300,
+    "to": 700,
+    "at": 0,
+    "attack": 0.005,
+    "dur": 0.12,
+    "gain": 0.12
+   },
+   {
+    "type": "noise",
+    "filter": "lowpass",
+    "freq": 700,
+    "q": 1,
+    "at": 0,
+    "attack": 0.003,
+    "dur": 0.2,
+    "gain": 0.5
+   }
   ]
  }
 }

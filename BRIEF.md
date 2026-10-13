@@ -8,6 +8,12 @@
 
 > ok now for some sound effects, then there should be a 3d represntation of the battle going on in between the current tiles that have each characters stats and callouts during battle. im thinking something final fnatasy 13, where the characters move around the enviroment and actually cast their spells against each other. each character should have 3 abilities you can choose from for battle, that you get as you level them up
 
+## The third request (Sam, 13 October 2026)
+
+> now the battle 3v3 screen is really good as it is, a few notes. the lhs rhs tiles with the character names and their health and cooldowns is slightly getting cut off by the fighting visualization window. second, i'd like the players in the viusalization to actually move around and try and get good angles on each other, and add new moves they can cast that allow them to move around the environment in order to dodge attacks or reposition for extra effectiveness. the crew window should also be accessible from the campaign window
+
+> the movement, look at final fantasy 13 for a good example
+
 ## The game
 
 A browser auto battler. A player fields a crew of three; fights play themselves, three against three, and the player watches, then spends what the fight paid. Played with a mouse or a finger, on a laptop or a phone.

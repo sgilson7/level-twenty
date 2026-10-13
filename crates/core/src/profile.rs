@@ -371,7 +371,7 @@ mod tests {
         assert_eq!(p.set_skill(&c, 0, 1), Err("skill_locked"));
         let r = p.grant(&c, true, 0, &[0], 1_000);
         assert!(p.units[0].level >= 5);
-        assert!(r.skills_opened.iter().any(|(_, s)| s == "Two-Piece"));
+        assert!(r.skills_opened.iter().any(|(_, s)| s == "Footwork"));
         assert_eq!(p.set_skill(&c, 0, 1), Ok(()));
         assert_eq!(p.team_entries(&c)[0], (0, p.units[0].level, 1));
         assert_eq!(p.set_skill(&c, 0, 2), Err("skill_locked"));

@@ -20,6 +20,7 @@ let lastFight = null; // what "fight again" repeats
 let rosterSlot = 0;
 let rosterPick = null;
 let chapterShown = 0;
+let rosterFrom = "menu"; // where the crew screen's Back goes
 let stage = null;
 
 // ---- text -----------------------------------------------------------------
@@ -164,6 +165,13 @@ function renderDetail(u) {
   d.append(sk);
 }
 
+function openRoster(from) {
+  rosterFrom = from;
+  rosterSlot = 0;
+  rosterPick = null;
+  renderRoster();
+}
+
 function renderRoster() {
   const all = call(game.roster()).ok;
   const team = call(game.home()).ok.team.map((u) => u.id);
@@ -228,6 +236,7 @@ function renderCampaign() {
     });
     tabs.append(b);
   });
+  el("c-team").replaceChildren(...call(game.home()).ok.team.map(miniUnit));
   const ch = chapters[chapterShown];
   const box = el("c-chapter");
   box.replaceChildren();
@@ -525,18 +534,16 @@ async function start() {
   stage = { renderer, N, game };
   wireSound();
   el("o-code").placeholder = t("online_code_placeholder");
-  for (const b of document.querySelectorAll("button.back")) b.addEventListener("click", renderMenu);
+  for (const b of document.querySelectorAll("button.back:not(#r-back)")) b.addEventListener("click", renderMenu);
+  el("r-back").addEventListener("click", () => (rosterFrom === "campaign" ? renderCampaign() : renderMenu()));
+  el("c-crew").addEventListener("click", () => openRoster("campaign"));
   el("b-campaign").addEventListener("click", () => {
     const chapters = call(game.campaign()).ok;
     chapterShown = chapters.reduce((last, ch, i) => (ch.open ? i : last), 0);
     renderCampaign();
   });
   el("b-random").addEventListener("click", startRandom);
-  el("b-roster").addEventListener("click", () => {
-    rosterSlot = 0;
-    rosterPick = null;
-    renderRoster();
-  });
+  el("b-roster").addEventListener("click", () => openRoster("menu"));
   el("b-help").addEventListener("click", () => show("help"));
   el("b-reset").addEventListener("click", () => {
     if (!window.confirm(t("reset_confirm"))) return;

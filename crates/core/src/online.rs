@@ -16,9 +16,10 @@ use crate::battle::{self, Entry, Record};
 use crate::content::Content;
 use crate::online_code;
 
-/// Bumped when a message changes shape. 2: a unit on the wire carries its
-/// chosen skill.
-pub const PROTOCOL: u32 = 2;
+/// Bumped when a message changes shape or a fight's rules change, so two
+/// copies that would decide a fight differently never meet. 2: a unit on the
+/// wire carries its chosen skill. 3: Dodge and Flank.
+pub const PROTOCOL: u32 = 3;
 
 /// A unit on the wire: its id, its level and the skill it fields.
 pub type Wire = (String, u32, usize);

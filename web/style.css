@@ -162,6 +162,7 @@ textarea { width: 100%; min-height: 4.5em; font-size: 12px; font-family: ui-mono
 .menu-foot { grid-column: 1 / -1; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
 
 .mini-team { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+.campaign-crew { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
 .mini {
   position: relative; display: flex; align-items: center; gap: 6px;
   background: #fff; border: 2px solid var(--ink); border-radius: 12px; padding: 4px 8px 4px 4px; min-width: 0;
@@ -279,9 +280,7 @@ details label { display: block; margin-top: 8px; font-weight: 700; font-size: 0.
 }
 .callout.mine { background: var(--magic); }
 .callout.foe { background: var(--bad); }
-.side { position: relative; z-index: 1; display: grid; gap: 10px; }
-.side.mine .fighter:nth-child(3) { margin-left: 10%; }
-.side.foe .fighter:nth-child(3) { margin-right: 10%; }
+.side { position: relative; z-index: 2; display: grid; gap: 10px; min-width: 0; }
 .side.foe { justify-items: end; }
 .side-label {
   font-weight: 900; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.08em;
@@ -307,10 +306,12 @@ details label { display: block; margin-top: 8px; font-weight: 700; font-size: 0.
 .f-tags { position: absolute; bottom: -12px; right: 8px; display: flex; gap: 4px; }
 .tag { font-size: 0.7em; font-weight: 800; border: 2px solid var(--ink); border-radius: 999px; padding: 0 6px; background: var(--paper); }
 .tag.stun { background: var(--gold); }
+.tag.dodge { background: #b8f2ee; }
 .tag.ready { background: var(--magic-soft); }
 .fighter.ready { border-color: var(--magic); }
-.side.mine .fighter.acting { transform: translateX(8%) scale(1.04); z-index: 3; }
-.side.foe .fighter.acting { transform: translateX(-8%) scale(1.04); z-index: 3; }
+.fighter.acting { transform: scale(1.03); z-index: 3; }
+.side.mine .fighter.acting { transform-origin: left center; }
+.side.foe .fighter.acting { transform-origin: right center; }
 .fighter.hit { animation: shake 0.3s; }
 .fighter.down { opacity: 0.45; filter: grayscale(1); }
 @keyframes shake {
@@ -331,6 +332,7 @@ details label { display: block; margin-top: 8px; font-weight: 700; font-size: 0.
 .float.bad { color: #ddd; font-size: 1.2em; }
 .float.heal { color: var(--hp); }
 .float.haste { color: var(--gauge); }
+.float.miss { color: #b8f2ee; font-size: 1.3em; font-style: italic; }
 @keyframes rise {
   0% { opacity: 0; transform: translate(-50%, 10px) scale(0.7); }
   15% { opacity: 1; transform: translate(-50%, -6px) scale(1.15); }
@@ -378,9 +380,6 @@ details label { display: block; margin-top: 8px; font-weight: 700; font-size: 0.
   .stage-wrap { min-height: 0; aspect-ratio: 4 / 3; }
   .side.foe { order: -1; }
   .side.mine { order: 1; }
-  .side.mine .fighter:nth-child(3), .side.foe .fighter:nth-child(3) { margin: 0; }
-  .side.mine .fighter.acting { transform: scale(1.03); }
-  .side.foe .fighter.acting { transform: scale(1.03); }
   .vs { grid-template-columns: 1fr; }
   .hero-text { position: static; max-width: none; border-width: 0; border-top: var(--line) solid var(--ink); border-radius: 0; box-shadow: none; }
 }

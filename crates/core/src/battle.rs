@@ -28,6 +28,8 @@ struct Fighter {
     gauge: i32,
     cooldown: i32,
     stunned: bool,
+    /// Stepped out of the way: the next blow aimed at this unit misses.
+    evading: bool,
     skill: usize,
 }
 
@@ -62,6 +64,8 @@ pub struct State {
     pub gauge_pct: i32,
     pub alive: bool,
     pub stunned: bool,
+    /// The next blow aimed at this unit misses (Dodge).
+    pub evading: bool,
     /// The skill fires on this unit's next turn.
     pub ready: bool,
 }
@@ -81,6 +85,30 @@ pub struct Hit {
     pub hasted: bool,
     /// The target's turn was pushed back (Slow).
     pub slowed: bool,
+    /// The target had stepped aside (Dodge) and the blow went wide.
+    pub missed: bool,
+    /// Struck from the flank (Flank): counted as with the edge.
+    pub flank: bool,
+}
+
+impl Hit {
+    /// Nothing happened to (side, slot) yet; the caller fills in what did.
+    fn on(side: usize, slot: usize) -> Hit {
+        Hit {
+            side,
+            slot,
+            amount: 0,
+            heal: false,
+            crit: false,
+            edge: 0,
+            ko: false,
+            stun: false,
+            hasted: false,
+            slowed: false,
+            missed: false,
+            flank: false,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -180,6 +208,7 @@ impl<'a> Fight<'a> {
             gauge_pct: if f.alive() { pct(f.gauge, GAUGE_FULL) } else { 0 },
             alive: f.alive(),
             stunned: f.stunned,
+            evading: f.alive() && f.evading,
             ready: f.alive() && f.cooldown == 0,
         };
         [
@@ -235,12 +264,21 @@ impl<'a> Fight<'a> {
             .min_by_key(|&k| (foes[k].hp, k))
     }
 
-    /// One blow from (side, slot) on the enemy in `target`.
-    fn strike(&mut self, side: usize, slot: usize, target: usize, power: i32) -> Hit {
+    /// One blow from (side, slot) on the enemy in `target`. From the flank
+    /// it counts as with the edge whatever the kinds; a target that has
+    /// stepped aside takes nothing and stops evading.
+    fn strike(&mut self, side: usize, slot: usize, target: usize, power: i32, flank: bool) -> Hit {
         let a = &self.sides[side][slot];
         let (atk, kind) = (a.atk, a.kind);
-        let foe_kind = self.sides[1 - side][target].kind;
-        let edge = kind.edge(foe_kind);
+        let foe = &mut self.sides[1 - side][target];
+        if foe.evading {
+            foe.evading = false;
+            return Hit {
+                missed: true,
+                ..Hit::on(1 - side, target)
+            };
+        }
+        let edge = if flank { 1 } else { kind.edge(foe.kind) };
         let edge_pct = match edge {
             1 => EDGE_GOOD,
             -1 => EDGE_BAD,
@@ -256,16 +294,12 @@ impl<'a> Fight<'a> {
         let foe = &mut self.sides[1 - side][target];
         foe.hp -= amount;
         Hit {
-            side: 1 - side,
-            slot: target,
             amount,
-            heal: false,
             crit,
             edge,
             ko: !foe.alive(),
-            stun: false,
-            hasted: false,
-            slowed: false,
+            flank,
+            ..Hit::on(1 - side, target)
         }
     }
 
@@ -275,16 +309,9 @@ impl<'a> Fight<'a> {
         let amount = amount.min(room);
         f.hp += amount;
         Hit {
-            side,
-            slot,
             amount,
             heal: true,
-            crit: false,
-            edge: 0,
-            ko: false,
-            stun: false,
-            hasted: false,
-            slowed: false,
+            ..Hit::on(side, slot)
         }
     }
 
@@ -303,27 +330,37 @@ impl<'a> Fight<'a> {
         } else if self.sides[side][slot].cooldown > 0 {
             self.sides[side][slot].cooldown -= 1;
             if let Some(t) = self.usual_target(side, kind) {
-                hits.push(self.strike(side, slot, t, BASIC_POWER));
+                hits.push(self.strike(side, slot, t, BASIC_POWER, false));
             }
             Act::Attack
         } else {
             self.sides[side][slot].cooldown = cooldown;
             match effect {
-                Effect::Strike | Effect::Stun | Effect::Drain | Effect::Haste | Effect::Slow => {
+                Effect::Strike
+                | Effect::Stun
+                | Effect::Drain
+                | Effect::Haste
+                | Effect::Slow
+                | Effect::Dodge
+                | Effect::Flank => {
+                    if effect == Effect::Dodge {
+                        self.sides[side][slot].evading = true;
+                    }
                     if let Some(t) = self.usual_target(side, kind) {
-                        let mut hit = self.strike(side, slot, t, power);
-                        if effect == Effect::Stun && !hit.ko {
+                        let mut hit = self.strike(side, slot, t, power, effect == Effect::Flank);
+                        let landed = !hit.ko && !hit.missed;
+                        if effect == Effect::Stun && landed {
                             self.sides[1 - side][t].stunned = true;
                             hit.stun = true;
                         }
-                        if effect == Effect::Slow && !hit.ko {
+                        if effect == Effect::Slow && landed {
                             let foe = &mut self.sides[1 - side][t];
                             foe.gauge = (foe.gauge - SLOW_GAUGE).max(0);
                             hit.slowed = true;
                         }
                         let dealt = hit.amount;
                         hits.push(hit);
-                        if effect == Effect::Drain {
+                        if effect == Effect::Drain && dealt > 0 {
                             hits.push(self.mend(side, slot, dealt * DRAIN_SHARE / 100));
                         }
                         if effect == Effect::Haste {
@@ -332,16 +369,8 @@ impl<'a> Fight<'a> {
                                 if k != slot && f.alive() {
                                     f.gauge += HASTE_GAUGE;
                                     hits.push(Hit {
-                                        side,
-                                        slot: k,
-                                        amount: 0,
-                                        heal: false,
-                                        crit: false,
-                                        edge: 0,
-                                        ko: false,
-                                        stun: false,
                                         hasted: true,
-                                        slowed: false,
+                                        ..Hit::on(side, k)
                                     });
                                 }
                             }
@@ -350,20 +379,20 @@ impl<'a> Fight<'a> {
                 }
                 Effect::Snipe => {
                     if let Some(t) = self.weakest_target(side) {
-                        hits.push(self.strike(side, slot, t, power));
+                        hits.push(self.strike(side, slot, t, power, false));
                     }
                 }
                 Effect::Double => {
                     for _ in 0..2 {
                         if let Some(t) = self.usual_target(side, kind) {
-                            hits.push(self.strike(side, slot, t, power));
+                            hits.push(self.strike(side, slot, t, power, false));
                         }
                     }
                 }
                 Effect::Sweep => {
                     for t in 0..self.sides[1 - side].len() {
                         if self.sides[1 - side][t].alive() {
-                            hits.push(self.strike(side, slot, t, power));
+                            hits.push(self.strike(side, slot, t, power, false));
                         }
                     }
                 }
@@ -420,6 +449,7 @@ pub fn fight(content: &Content, a: &[Entry], b: &[Entry], seed: u64) -> Record {
                     gauge: 0,
                     cooldown: def.skills[skill].cooldown - 1,
                     stunned: false,
+                    evading: false,
                     skill,
                 }
             })
@@ -762,6 +792,47 @@ mod tests {
             }
         }
         assert!(seen > 10);
+    }
+
+    #[test]
+    fn a_dodge_makes_the_next_blow_aimed_at_the_caster_miss() {
+        let c = content();
+        // Rook's second skill is Footwork (dodge)
+        let rook = (c.unit_index("rook").unwrap(), 20, 1);
+        let mut seen = 0;
+        for seed in 0..30 {
+            let r = fight(&c, &[rook], &ids(&c, &[("pip", 20)]), seed);
+            let Some(at) = r.turns.iter().position(|t| t.side == 0 && t.act == Act::Skill) else {
+                continue;
+            };
+            assert_eq!(r.turns[at].effect, Some(Effect::Dodge));
+            assert!(r.turns[at].after[0][0].evading);
+            let Some(next) = r.turns[at + 1..]
+                .iter()
+                .find(|t| t.side == 1 && !t.hits.is_empty())
+            else {
+                continue;
+            };
+            let h = &next.hits[0];
+            assert!(h.missed && h.amount == 0 && !h.ko && !h.stun, "seed {seed}");
+            assert!(!next.after[0][0].evading);
+            seen += 1;
+        }
+        assert!(seen > 10);
+    }
+
+    #[test]
+    fn a_flank_counts_as_with_the_edge_even_against_it() {
+        let c = content();
+        // Pip (ranged) against Rook (melee) is against the edge; his second
+        // skill, High Ground, is a flank
+        let pip = (c.unit_index("pip").unwrap(), 10, 1);
+        let r = fight(&c, &[pip], &ids(&c, &[("rook", 10)]), 5);
+        let mine = |act: Act| r.turns.iter().find(|t| t.side == 0 && t.act == act).unwrap().hits[0].clone();
+        let (plain, flank) = (mine(Act::Attack), mine(Act::Skill));
+        assert_eq!((plain.edge, plain.flank), (-1, false));
+        assert_eq!((flank.edge, flank.flank), (1, true));
+        assert!(flank.amount > plain.amount);
     }
 
     #[test]

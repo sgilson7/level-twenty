@@ -66,6 +66,11 @@ pub enum Effect {
     Mend,
     /// A hit, and the target's turn is pushed back.
     Slow,
+    /// A hit, and the caster steps aside: the next blow aimed at it misses.
+    Dodge,
+    /// A hit from the target's flank, counted as with the edge whatever the
+    /// kinds.
+    Flank,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]

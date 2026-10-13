@@ -53,6 +53,7 @@ function paint(states, teams) {
       const tags = f.querySelector(".f-tags");
       tags.replaceChildren();
       if (st.stunned) tags.append(make("span", "tag stun", t("stunned_tag")));
+      if (st.evading) tags.append(make("span", "tag dodge", t("dodging_tag")));
       if (st.ready) tags.append(make("span", "tag ready", t("ready_tag")));
     });
   });
@@ -61,6 +62,7 @@ function paint(states, teams) {
 // The words and class of a number that pops up for a hit.
 function hitText(hit) {
   if (hit.hasted) return ["»", "float haste"];
+  if (hit.missed) return [t("missed"), "float miss"];
   if (hit.heal) return ["+" + hit.amount, "float heal"];
   let cls = "float";
   if (hit.edge > 0) cls += " good";
@@ -71,7 +73,8 @@ function hitText(hit) {
 function pop(parent, hit, display, at) {
   const [text, cls] = hitText(hit);
   const n = make("span", cls, text);
-  if (!hit.heal && !hit.hasted && hit.edge !== 0) n.append(make("small", "", hit.edge > 0 ? t("good_hit") : t("bad_hit")));
+  if (hit.flank) n.append(make("small", "", t("flanked")));
+  else if (!hit.heal && !hit.hasted && !hit.missed && hit.edge !== 0) n.append(make("small", "", hit.edge > 0 ? t("good_hit") : t("bad_hit")));
   if (hit.slowed) n.append(make("small", "", t("slowed_tag")));
   if (at) {
     n.style.left = at[0] + "%";
@@ -87,6 +90,7 @@ function logLine(turn, teams) {
   if (turn.act === "skill") return t("log_skill", { actor, skill: turn.skill });
   const hit = turn.hits[0];
   if (!hit) return actor;
+  if (hit.missed) return t("log_missed", { actor, target: teams[hit.side][hit.slot].name });
   const line = t("log_attack", { actor, target: teams[hit.side][hit.slot].name, amount: hit.amount });
   return hit.ko ? line + " · " + t("log_ko", { target: teams[hit.side][hit.slot].name }) : line;
 }
@@ -117,9 +121,11 @@ function speeds(display, onChange) {
   return current;
 }
 
-const START_SOUND = { charge: "swing", shoot: "shoot", spell: "cast", support: "cast", dazed: "stun" };
+const START_SOUND = { charge: "swing", shoot: "shoot", spell: "cast", support: "cast", dazed: "stun", flank: "dash", dodge: "swing" };
 
 function hitSound(hit) {
+  if (hit.missed) return "miss";
+  if (hit.flank) return "flank";
   if (hit.heal) return "heal";
   if (hit.hasted) return "haste";
   if (hit.slowed) return "slow";
@@ -191,11 +197,12 @@ export function playFight(view, display, stage, done) {
     paint(turn.after, rec.teams);
     if (quiet) return;
     if (beats[i].style === "spell") sound.play("burst");
+    if (beats[i].style === "dodge") sound.play("dash");
     for (const h of turn.hits) {
       const f = el("f-" + h.side + "-" + h.slot);
       if (f) {
         pop(f, h, display, null);
-        if (!h.heal && !h.hasted) {
+        if (!h.heal && !h.hasted && !h.missed) {
           f.classList.remove("hit");
           void f.offsetWidth;
           f.classList.add("hit");

@@ -57,7 +57,7 @@
   <!-- Crew -->
   <section id="roster" class="screen" hidden>
     <header class="bar-head">
-      <button class="back" data-copy="back"></button>
+      <button class="back" id="r-back" data-copy="back"></button>
       <h2 data-copy="menu_roster"></h2>
     </header>
     <div class="roster-team card">
@@ -77,6 +77,13 @@
       <button class="back" data-copy="back"></button>
       <h2 data-copy="menu_campaign"></h2>
     </header>
+    <div class="campaign-crew card">
+      <div class="grow">
+        <div class="label" data-copy="your_team"></div>
+        <div id="c-team" class="mini-team"></div>
+      </div>
+      <button id="c-crew" data-copy="change_crew"></button>
+    </div>
     <div id="c-tabs" class="tabs"></div>
     <div id="c-chapter" class="chapter"></div>
     <p id="c-error" class="error small" role="status"></p>
