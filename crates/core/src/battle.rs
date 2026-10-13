@@ -12,8 +12,9 @@ use crate::balance::*;
 use crate::content::{Content, Effect, Kind};
 use crate::rng::Rng;
 
-/// One side's entry: a unit (index into the roster) at a level.
-pub type Entry = (usize, u32);
+/// One side's entry: a unit (index into the roster), its level, and which of
+/// its three skills it fields.
+pub type Entry = (usize, u32, usize);
 
 #[derive(Debug, Clone)]
 struct Fighter {
@@ -27,6 +28,7 @@ struct Fighter {
     gauge: i32,
     cooldown: i32,
     stunned: bool,
+    skill: usize,
 }
 
 impl Fighter {
@@ -77,6 +79,8 @@ pub struct Hit {
     pub stun: bool,
     /// The target's turn was moved closer (Haste).
     pub hasted: bool,
+    /// The target's turn was pushed back (Slow).
+    pub slowed: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -261,6 +265,7 @@ impl<'a> Fight<'a> {
             ko: !foe.alive(),
             stun: false,
             hasted: false,
+            slowed: false,
         }
     }
 
@@ -279,14 +284,16 @@ impl<'a> Fight<'a> {
             ko: false,
             stun: false,
             hasted: false,
+            slowed: false,
         }
     }
 
     fn take_turn(&mut self, side: usize, slot: usize) -> Turn {
         self.sides[side][slot].gauge -= GAUGE_FULL;
         let unit = self.sides[side][slot].unit;
-        let skill = &self.content.units[unit].skill;
+        let skill = &self.content.units[unit].skills[self.sides[side][slot].skill];
         let (effect, power, cooldown) = (skill.effect, skill.power, skill.cooldown);
+        let skill_name = skill.name.clone();
         let kind = self.sides[side][slot].kind;
         let mut hits = Vec::new();
 
@@ -302,12 +309,17 @@ impl<'a> Fight<'a> {
         } else {
             self.sides[side][slot].cooldown = cooldown;
             match effect {
-                Effect::Strike | Effect::Stun | Effect::Drain | Effect::Haste => {
+                Effect::Strike | Effect::Stun | Effect::Drain | Effect::Haste | Effect::Slow => {
                     if let Some(t) = self.usual_target(side, kind) {
                         let mut hit = self.strike(side, slot, t, power);
                         if effect == Effect::Stun && !hit.ko {
                             self.sides[1 - side][t].stunned = true;
                             hit.stun = true;
+                        }
+                        if effect == Effect::Slow && !hit.ko {
+                            let foe = &mut self.sides[1 - side][t];
+                            foe.gauge = (foe.gauge - SLOW_GAUGE).max(0);
+                            hit.slowed = true;
                         }
                         let dealt = hit.amount;
                         hits.push(hit);
@@ -329,6 +341,7 @@ impl<'a> Fight<'a> {
                                         ko: false,
                                         stun: false,
                                         hasted: true,
+                                        slowed: false,
                                     });
                                 }
                             }
@@ -363,6 +376,14 @@ impl<'a> Fight<'a> {
                     let amount = self.sides[side][slot].atk * power / 100;
                     hits.push(self.mend(side, t, amount));
                 }
+                Effect::Mend => {
+                    let amount = self.sides[side][slot].atk * power / 100;
+                    for k in 0..self.sides[side].len() {
+                        if self.sides[side][k].alive() {
+                            hits.push(self.mend(side, k, amount));
+                        }
+                    }
+                }
             }
             Act::Skill
         };
@@ -371,7 +392,7 @@ impl<'a> Fight<'a> {
             side,
             slot,
             act,
-            skill: is_skill.then(|| self.content.units[unit].skill.name.clone()),
+            skill: is_skill.then(|| skill_name.clone()),
             effect: is_skill.then_some(effect),
             hits,
             after: self.states(),
@@ -384,7 +405,7 @@ impl<'a> Fight<'a> {
 pub fn fight(content: &Content, a: &[Entry], b: &[Entry], seed: u64) -> Record {
     let make = |side: &[Entry]| -> Vec<Fighter> {
         side.iter()
-            .map(|&(unit, level)| {
+            .map(|&(unit, level, skill)| {
                 let def = &content.units[unit];
                 let level = clamp_unit_level(level);
                 let s = def.stats(level);
@@ -397,8 +418,9 @@ pub fn fight(content: &Content, a: &[Entry], b: &[Entry], seed: u64) -> Record {
                     atk: s.atk,
                     spd: s.spd,
                     gauge: 0,
-                    cooldown: def.skill.cooldown - 1,
+                    cooldown: def.skills[skill].cooldown - 1,
                     stunned: false,
+                    skill,
                 }
             })
             .collect()
@@ -418,7 +440,7 @@ pub fn fight(content: &Content, a: &[Entry], b: &[Entry], seed: u64) -> Record {
             hp: x.max_hp,
             atk: x.atk,
             spd: x.spd,
-            skill: def.skill.name.clone(),
+            skill: def.skills[x.skill].name.clone(),
         }
     };
     let teams = [
@@ -461,7 +483,7 @@ mod tests {
 
     fn ids(c: &Content, team: &[(&str, u32)]) -> Vec<Entry> {
         team.iter()
-            .map(|(id, l)| (c.unit_index(id).unwrap(), *l))
+            .map(|(id, l)| (c.unit_index(id).unwrap(), *l, 0))
             .collect()
     }
 
@@ -669,6 +691,77 @@ mod tests {
             .unwrap_or_default();
         let weakest = (0..foes.len()).min_by_key(|&k| (foes[k], k)).unwrap();
         assert_eq!(t.hits[0].slot, weakest);
+    }
+
+    #[test]
+    fn mend_mends_every_ally_standing() {
+        let c = content();
+        // Nan's second skill is Paper Cranes (mend)
+        let nan = (c.unit_index("nan").unwrap(), 20, 1);
+        let rook = (c.unit_index("rook").unwrap(), 20, 0);
+        let foes = ids(&c, &[("vela", 8), ("pip", 8), ("june", 8)]);
+        let r = fight(&c, &[nan, rook], &foes, 3);
+        let t = r
+            .turns
+            .iter()
+            .find(|t| t.side == 0 && t.slot == 0 && t.act == Act::Skill)
+            .expect("Nan casts");
+        assert_eq!(t.effect, Some(Effect::Mend));
+        assert!(t.hits.iter().all(|h| h.heal && h.side == 0));
+        let standing = t.after[0].iter().filter(|s| s.alive).count();
+        assert_eq!(t.hits.len(), standing);
+    }
+
+    /// Turns the foe takes before `side 0` has taken `n` turns.
+    fn foe_turns_before(r: &Record, n: usize) -> usize {
+        let mut mine = 0;
+        let mut theirs = 0;
+        for t in &r.turns {
+            if t.side == 0 {
+                mine += 1;
+                if mine == n {
+                    break;
+                }
+            } else {
+                theirs += 1;
+            }
+        }
+        theirs
+    }
+
+    #[test]
+    fn slow_pushes_the_target_back_and_a_chosen_skill_is_the_one_used() {
+        let c = content();
+        // Vela's first skill is a sweep, her second Neon Hex (slow); against
+        // a sturdy foe the slow one lets it act less often
+        let v = c.unit_index("vela").unwrap();
+        let foe = ids(&c, &[("chum", 20)]);
+        let slow = fight(&c, &[(v, 20, 1)], &foe, 6);
+        let sweep = fight(&c, &[(v, 20, 0)], &foe, 6);
+        let t = slow
+            .turns
+            .iter()
+            .find(|t| t.side == 0 && t.act == Act::Skill)
+            .unwrap();
+        assert_eq!(t.skill.as_deref(), Some("Neon Hex"));
+        assert!(t.hits[0].slowed);
+        assert_eq!(slow.teams[0][0].skill, "Neon Hex");
+        assert!(foe_turns_before(&slow, 9) <= foe_turns_before(&sweep, 9));
+        // The target's bar was short of full when Vela acted, and Slow takes
+        // 35% off it: straight after, it can be at most 65% full.
+        let cap = (GAUGE_FULL - SLOW_GAUGE) * 100 / GAUGE_FULL;
+        let mut seen = 0;
+        for seed in 0..40 {
+            let r = fight(&c, &[(v, 20, 1)], &foe, seed);
+            for t in r.turns.iter().filter(|t| t.side == 0 && t.act == Act::Skill) {
+                let after = &t.after[1][0];
+                if after.alive {
+                    assert!(after.gauge_pct <= cap, "seed {seed}: {}", after.gauge_pct);
+                    seen += 1;
+                }
+            }
+        }
+        assert!(seen > 10);
     }
 
     #[test]

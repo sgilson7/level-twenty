@@ -2,12 +2,37 @@
 //!
 //! Builder requirement: the shim decides nothing. Each function is one call
 //! into the core and a conversion of its arguments. The page's clock arrives
-//! as a float of milliseconds and becomes the core's whole-number seed.
+//! as a float of milliseconds and becomes the core's whole-number seed. The
+//! core speaks Q16.16 integers; WebGL wants `f32`, so the stage's values on
+//! the way out are divided by the core's own `ONE`.
 //! `crates/core/tests/boundary.rs` fails if a branch, a loop or the `?`
 //! operator appears here.
 
-use lt_core::game;
+use lt_core::{fx, game};
 use wasm_bindgen::prelude::*;
+
+const ONE: f32 = fx::ONE as f32;
+
+fn floats(v: Vec<i32>) -> Vec<f32> {
+    v.into_iter().map(|x| x as f32 / ONE).collect()
+}
+
+/// The renderer's sizes, strides and offsets.
+#[wasm_bindgen]
+pub fn stage_numbers() -> String {
+    game::stage_numbers()
+}
+
+#[wasm_bindgen]
+pub fn mesh_vertices(id: u32) -> Vec<f32> {
+    floats(game::mesh_vertices(id))
+}
+
+/// White noise for the sound, `-1..1`.
+#[wasm_bindgen]
+pub fn noise(n: u32, seed: u32) -> Vec<f32> {
+    floats(game::noise(n, seed))
+}
 
 #[wasm_bindgen]
 pub struct Game {
@@ -41,6 +66,48 @@ impl Game {
 
     pub fn set_team(&mut self, ids_json: &str) -> String {
         self.inner.set_team(ids_json)
+    }
+
+    pub fn set_skill(&mut self, id: &str, k: u32) -> String {
+        self.inner.set_skill(id, k)
+    }
+
+    pub fn stage_begin(&self) -> String {
+        self.inner.stage_begin()
+    }
+
+    pub fn stage_scene_values(&self) -> Vec<f32> {
+        floats(self.inner.stage_scene().0)
+    }
+
+    pub fn stage_scene_draws(&self) -> Vec<u32> {
+        self.inner.stage_scene().1
+    }
+
+    pub fn stage_colours(&self) -> Vec<f32> {
+        floats(self.inner.stage_colours())
+    }
+
+    /// The page's playback clock in milliseconds, and the canvas size.
+    pub fn stage_frame(&mut self, t_ms: f64, width: u32, height: u32) {
+        self.inner.stage_frame(t_ms as i32, width, height)
+    }
+
+    pub fn stage_view(&self) -> Vec<f32> {
+        floats(self.inner.stage_view())
+    }
+
+    pub fn stage_values(&self) -> Vec<f32> {
+        floats(self.inner.stage_values())
+    }
+
+    pub fn stage_draws(&self) -> Vec<u32> {
+        self.inner.stage_draws()
+    }
+
+    /// Each unit's head on screen, in percent from the left and the top.
+    pub fn stage_marks(&self) -> Vec<f32> {
+        floats(self.inner.stage_marks())
     }
 
     pub fn campaign(&self) -> String {

@@ -13,6 +13,8 @@ use crate::content::{Content, Effect, Kind, Stats};
 use crate::online::{self, Role, Session};
 use crate::profile::{xp_pct, Profile, Reward};
 use crate::rng::Rng;
+use crate::stage::{Frame, Show};
+use crate::{fx, mesh, render};
 
 fn ok<T: Serialize>(v: &T) -> String {
     json!({ "ok": v }).to_string()
@@ -28,6 +30,9 @@ struct SkillView {
     effect: Effect,
     power: i32,
     cooldown: i32,
+    unlock: u32,
+    open: bool,
+    chosen: bool,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -48,7 +53,9 @@ struct UnitView {
     stats: Stats,
     /// Stats one level up, or the same at twenty.
     next: Stats,
+    /// The skill this unit fields, then all three.
     skill: SkillView,
+    skills: Vec<SkillView>,
     locked: bool,
     unlock: u32,
     in_team: bool,
@@ -79,6 +86,9 @@ pub struct Game {
     content: Content,
     profile: Profile,
     online: Session,
+    /// The last fight, for the 3D stage to play.
+    show: Option<Show>,
+    frame: Frame,
 }
 
 impl Game {
@@ -89,6 +99,8 @@ impl Game {
             content,
             profile,
             online: Session::default(),
+            show: None,
+            frame: Frame::default(),
         })
     }
 
@@ -107,6 +119,20 @@ impl Game {
         let p = &self.profile.units[u];
         let maxed = p.level >= MAX_UNIT_LEVEL;
         let need = if maxed { 0 } else { unit_xp_to_next(p.level) };
+        let skills: Vec<SkillView> = def
+            .skills
+            .iter()
+            .enumerate()
+            .map(|(k, s)| SkillView {
+                name: s.name.clone(),
+                effect: s.effect,
+                power: s.power,
+                cooldown: s.cooldown,
+                unlock: s.unlock,
+                open: def.skill_open(k, p.level),
+                chosen: k == p.skill,
+            })
+            .collect();
         UnitView {
             id: def.id.clone(),
             name: def.name.clone(),
@@ -122,19 +148,15 @@ impl Game {
             maxed,
             stats: def.stats(p.level),
             next: def.stats(p.level + 1),
-            skill: SkillView {
-                name: def.skill.name.clone(),
-                effect: def.skill.effect,
-                power: def.skill.power,
-                cooldown: def.skill.cooldown,
-            },
+            skill: skills[p.skill].clone(),
+            skills,
             locked: !self.profile.unlocked(&self.content, u),
             unlock: def.unlock,
             in_team: self.profile.team.contains(&def.id),
         }
     }
 
-    fn foe_view(&self, (u, level): Entry) -> FoeView {
+    fn foe_view(&self, (u, level, _): Entry) -> FoeView {
         let def = &self.content.units[u];
         FoeView {
             id: def.id.clone(),
@@ -198,6 +220,21 @@ impl Game {
         }
     }
 
+    /// Fields skill `k` (0, 1 or 2) on the unit with id `id`.
+    pub fn set_skill(&mut self, id: &str, k: u32) -> String {
+        let Some(u) = self.content.unit_index(id) else {
+            return err("team_unknown");
+        };
+        match self.profile.set_skill(&self.content, u, k as usize) {
+            Ok(()) => {
+                let mine = self.my_team_wire();
+                self.online.retell(&mine);
+                ok(&self.unit_view(u))
+            }
+            Err(key) => err(key),
+        }
+    }
+
     pub fn campaign(&self) -> String {
         let mut index = 0;
         let mut chapters = Vec::new();
@@ -207,7 +244,7 @@ impl Game {
                 let enemies: Vec<FoeView> = st
                     .enemies
                     .iter()
-                    .map(|(id, l)| self.foe_view((self.content.unit_index(id).unwrap_or(0), *l)))
+                    .map(|(id, l)| self.foe_view((self.content.unit_index(id).unwrap_or(0), *l, 0)))
                     .collect();
                 let stars = self.profile.stars[index];
                 stages.push(json!({
@@ -245,7 +282,11 @@ impl Game {
         let foes: Vec<Entry> = def
             .enemies
             .iter()
-            .filter_map(|(id, l)| self.content.unit_index(id).map(|u| (u, *l)))
+            .filter_map(|(id, l)| {
+                self.content
+                    .unit_index(id)
+                    .map(|u| (u, *l, self.content.units[u].best_skill(*l)))
+            })
             .collect();
         let title = def.name.clone();
         let backdrop = self.content.chapters[chapter].backdrop.clone();
@@ -269,6 +310,7 @@ impl Game {
         }
         reward.first_clear = first_clear;
         let next = stage + 1;
+        self.show = Some(Show::new(&self.content, record.clone(), chapter));
         ok(&FightView {
             mode: "campaign",
             backdrop,
@@ -286,6 +328,7 @@ impl Game {
         let mut rng = Rng::new(seed);
         let n = self.content.units.len();
         let centre = clamp_unit_level(self.profile.level) as i32;
+        let content = &self.content;
         let draw = |rng: &mut Rng| -> Vec<Entry> {
             let mut picked: Vec<usize> = Vec::new();
             while picked.len() < TEAM_SIZE {
@@ -298,19 +341,22 @@ impl Game {
                 .into_iter()
                 .map(|u| {
                     let l = rng.range(centre - RANDOM_LEVEL_SPREAD, centre + RANDOM_LEVEL_SPREAD);
-                    (u, clamp_unit_level(l.max(1) as u32))
+                    let level = clamp_unit_level(l.max(1) as u32);
+                    let skill = rng.range(0, content.units[u].best_skill(level) as i32) as usize;
+                    (u, level, skill)
                 })
                 .collect()
         };
         let mine = draw(&mut rng);
         let foes = draw(&mut rng);
-        let backdrops: Vec<String> = self.content.chapters.iter().map(|c| c.backdrop.clone()).collect();
-        let backdrop = backdrops[rng.range(0, backdrops.len() as i32 - 1) as usize].clone();
+        let chapter = rng.range(0, self.content.chapters.len() as i32 - 1) as usize;
+        let backdrop = self.content.chapters[chapter].backdrop.clone();
         let record = battle::fight(&self.content, &mine, &foes, rng.next());
         let won = record.winner == Some(0);
         let reward = self
             .profile
             .grant(&self.content, won, random_account_xp(won), &[], 0);
+        self.show = Some(Show::new(&self.content, record.clone(), chapter));
         ok(&FightView {
             mode: "random",
             backdrop,
@@ -322,9 +368,69 @@ impl Game {
         })
     }
 
+    // ---- the 3D stage ---------------------------------------------------------
+
+    /// The last fight's timeline: when each turn starts, lands and ends, in
+    /// milliseconds at speed ×1, and when the whole thing is over. `null`
+    /// before any fight.
+    pub fn stage_begin(&self) -> String {
+        match &self.show {
+            Some(s) => ok(&json!({ "beats": s.beats, "total": s.total() })),
+            None => ok(&Value::Null),
+        }
+    }
+
+    /// The scenery's instances and draws, uploaded once a fight.
+    pub fn stage_scene(&self) -> (Vec<i32>, Vec<u32>) {
+        match &self.show {
+            Some(s) => {
+                let (v, d) = s.scene();
+                (v, d.concat())
+            }
+            None => (Vec::new(), Vec::new()),
+        }
+    }
+
+    /// The shader's colours (see `Show::uniforms`), then the clear colour.
+    pub fn stage_colours(&self) -> Vec<i32> {
+        match &self.show {
+            Some(s) => {
+                let mut u = s.uniforms();
+                u.extend(s.clear());
+                u
+            }
+            None => Vec::new(),
+        }
+    }
+
+    /// Works out the moment `t_ms` for a view `width` by `height`.
+    pub fn stage_frame(&mut self, t_ms: i32, width: u32, height: u32) {
+        let aspect = fx::div(width.max(1) as i32, height.max(1) as i32);
+        self.frame = match &self.show {
+            Some(s) => s.frame(t_ms, aspect),
+            None => Frame::default(),
+        };
+    }
+
+    pub fn stage_view(&self) -> Vec<i32> {
+        self.frame.view.clone()
+    }
+
+    pub fn stage_values(&self) -> Vec<i32> {
+        self.frame.values.clone()
+    }
+
+    pub fn stage_draws(&self) -> Vec<u32> {
+        self.frame.draws.clone()
+    }
+
+    pub fn stage_marks(&self) -> Vec<i32> {
+        self.frame.marks.clone()
+    }
+
     // ---- online ------------------------------------------------------------
 
-    fn my_team_wire(&self) -> Vec<(String, u32)> {
+    fn my_team_wire(&self) -> Vec<online::Wire> {
         online::write_team(&self.content, &self.profile.team_entries(&self.content))
     }
 
@@ -432,8 +538,9 @@ impl Game {
         // The fight may have levelled units up: tell the other browser.
         let mine = self.my_team_wire();
         self.online.retell(&mine);
-        let backdrops: Vec<String> = self.content.chapters.iter().map(|c| c.backdrop.clone()).collect();
-        let backdrop = backdrops[(ready.record.seed % backdrops.len() as u64) as usize].clone();
+        let chapter = (ready.record.seed % self.content.chapters.len() as u64) as usize;
+        let backdrop = self.content.chapters[chapter].backdrop.clone();
+        self.show = Some(Show::new(&self.content, ready.record.clone(), chapter));
         ok(&FightView {
             mode: "online",
             backdrop,
@@ -444,6 +551,51 @@ impl Game {
             next_stage_open: false,
         })
     }
+}
+
+/// The renderer's contract: every size, stride and offset the page's WebGL
+/// file needs, so it holds no layout of its own.
+pub fn stage_numbers() -> String {
+    let bpv = render::BYTES_PER_VALUE;
+    let v3b = 3 * bpv;
+    let vec4 = 4 * bpv;
+    json!({
+        "meshes": mesh::Mesh::ALL.iter().map(|m| json!({
+            "id": *m as u32,
+            "vertices": mesh::vertices(*m).len() / mesh::VERTEX_VALUES,
+        })).collect::<Vec<_>>(),
+        "vertex": {
+            "stride": mesh::VERTEX_VALUES * bpv,
+            "attributes": [["aPos", 3, 0], ["aNormal", 3, v3b], ["aTint", 3, 2 * v3b]],
+        },
+        "instance": {
+            "stride": render::INSTANCE_VALUES * bpv,
+            "attributes": [["iA", 4, 0], ["iB", 4, vec4], ["iC", 4, 2 * vec4], ["iD", 4, 3 * vec4]],
+        },
+        "draw_values": render::DRAW_VALUES,
+        "buffers": { "static": render::STATIC_BUFFER, "dynamic": render::DYNAMIC_BUFFER },
+        "passes": { "solid": render::PASS_SOLID, "ink": render::PASS_INK, "glow": render::PASS_GLOW },
+        "uniforms": [["uSky", 3], ["uFog", 3], ["uFogRange", 2], ["uLight", 3], ["uLightDir", 3], ["uInk", 3]],
+        "view": { "matrix": [0, 16], "eye": [16, 19] },
+        "clear": 3,
+        "marks": 2,
+    })
+    .to_string()
+}
+
+pub fn mesh_vertices(id: u32) -> Vec<i32> {
+    mesh::Mesh::ALL
+        .iter()
+        .find(|m| **m as u32 == id)
+        .map(|m| mesh::vertices(*m))
+        .unwrap_or_default()
+}
+
+/// White noise for the page's sound, from the core's generator: the page
+/// may not draw random numbers.
+pub fn noise(n: u32, seed: u32) -> Vec<i32> {
+    let mut r = Rng::new(seed as u64);
+    (0..n.min(1 << 20)).map(|_| r.range(-fx::ONE, fx::ONE)).collect()
 }
 
 #[cfg(test)]
@@ -580,6 +732,34 @@ mod tests {
         assert!(drawn || wa != wb, "one browser wins and the other loses");
         assert_eq!(fa["ok"]["record"]["teams"][0], fb["ok"]["record"]["teams"][1]);
         assert!(parse(&a.online_take())["ok"].is_null());
+    }
+
+    #[test]
+    fn every_fight_leaves_a_stage_to_play() {
+        let mut g = game();
+        assert!(parse(&g.stage_begin())["ok"].is_null());
+        g.fight_random(4);
+        let b = parse(&g.stage_begin());
+        let beats = b["ok"]["beats"].as_array().unwrap();
+        assert!(!beats.is_empty());
+        assert!(b["ok"]["total"].as_i64().unwrap() > beats.last().unwrap()["end"].as_i64().unwrap());
+        g.stage_frame(1000, 16, 9);
+        assert_eq!(g.stage_view().len(), 19);
+        assert_eq!(g.stage_marks().len(), 12);
+        assert!(!g.stage_values().is_empty() && !g.stage_draws().is_empty());
+        assert!(!g.stage_scene().0.is_empty());
+        assert_eq!(g.stage_colours().len(), 3 + 3 + 2 + 3 + 3 + 3 + 3);
+    }
+
+    #[test]
+    fn a_unit_fields_a_skill_once_its_level_opens_it() {
+        let mut g = game();
+        assert_eq!(parse(&g.set_skill("rook", 1))["error"], "skill_locked");
+        assert_eq!(parse(&g.set_skill("nobody", 0))["error"], "team_unknown");
+        let v = parse(&g.set_skill("rook", 0));
+        assert_eq!(v["ok"]["skills"].as_array().unwrap().len(), 3);
+        assert_eq!(v["ok"]["skills"][0]["chosen"], true);
+        assert_eq!(v["ok"]["skills"][1]["open"], false);
     }
 
     #[test]

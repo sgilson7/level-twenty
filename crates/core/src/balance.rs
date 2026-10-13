@@ -2,6 +2,8 @@
 //! `data/units.json`; these are the rules they are read through.
 
 pub const TEAM_SIZE: usize = 3;
+/// Skills per unit; the player fields one.
+pub const SKILLS: usize = 3;
 
 pub const MAX_UNIT_LEVEL: u32 = 20;
 pub const MAX_ACCOUNT_LEVEL: u32 = 30;
@@ -25,6 +27,8 @@ pub const CRIT_CHANCE: i32 = 15;
 pub const CRIT_POWER: i32 = 150;
 /// How far Haste moves every other ally's gauge.
 pub const HASTE_GAUGE: i32 = 300;
+/// How far Slow pushes the target's gauge back.
+pub const SLOW_GAUGE: i32 = 350;
 /// Drain mends the attacker by this percent of the damage it did.
 pub const DRAIN_SHARE: i32 = 50;
 

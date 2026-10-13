@@ -2,9 +2,11 @@
 // returns. Which screen is showing, which slot is picked and how fast a fight
 // plays back are the page's own business; every rule, number and percentage
 // comes from the core (crates/core/src/game.rs).
-import init, { Game } from "./pkg/lt_shim.js";
+import init, { Game, stage_numbers, mesh_vertices } from "./pkg/lt_shim.js";
 import { makeOnline } from "./online.js";
 import { playFight } from "./battle.js";
+import { makeRenderer } from "./gl.js";
+import * as sound from "./sound.js";
 
 const BUILD = "__BUILD__";
 const el = (id) => document.getElementById(id);
@@ -18,6 +20,7 @@ let lastFight = null; // what "fight again" repeats
 let rosterSlot = 0;
 let rosterPick = null;
 let chapterShown = 0;
+let stage = null;
 
 // ---- text -----------------------------------------------------------------
 
@@ -138,8 +141,26 @@ function renderDetail(u) {
   if (!u.maxed) stats.append(make("p", "muted small", "→ " + t("next_level")));
   d.append(stats);
   const sk = make("div", "skill");
-  sk.append(make("b", "", u.skill.name), make("span", "muted small", " · " + t("skill_cooldown", { n: u.skill.cooldown })));
-  sk.append(make("p", "small", t("effect_" + u.skill.effect, u.skill)));
+  sk.append(make("b", "", t("skills_title")), make("p", "muted small", t("skills_help")));
+  const list = make("div", "skills");
+  u.skills.forEach((s, k) => {
+    const b = make("button", "skill-pick" + (s.chosen ? " chosen" : ""));
+    b.dataset.skill = k;
+    b.disabled = !s.open || u.locked;
+    const head = make("span");
+    head.append(make("b", "", s.name), make("span", "muted small", " · " + t("skill_cooldown", { n: s.cooldown })));
+    b.append(head, make("span", "small", t("effect_" + s.effect, s)));
+    if (!s.open) b.append(make("span", "small locked-line", t("skill_unlock", { level: s.unlock })));
+    else if (s.chosen) b.append(make("span", "small good", t("skill_fielded")));
+    b.addEventListener("click", () => {
+      const r = call(game.set_skill(u.id, k));
+      if (r.error) el("r-error").textContent = t(r.error);
+      else save();
+      renderRoster();
+    });
+    list.append(b);
+  });
+  sk.append(list);
   d.append(sk);
 }
 
@@ -252,7 +273,7 @@ function startRandom() {
 
 function runFight(view) {
   show("battle");
-  playFight(view, DISPLAY, () => renderResult(view));
+  playFight(view, DISPLAY, stage, () => renderResult(view));
 }
 
 // ---- results -----------------------------------------------------------------
@@ -278,6 +299,11 @@ function renderResult(view) {
     li.append(img(portrait(id), "mini-art"), make("span", "", t("unlocked_now", { name: u.name })));
     unlocks.append(li);
   }
+  const learned = el("x-skills");
+  learned.replaceChildren();
+  for (const [unit, skill] of r.skills_opened) learned.append(make("li", "unlock skill-line", t("skill_opened", { unit, skill })));
+  const levelled = r.level_after !== r.level_before || r.units.some((u) => u.level_after !== u.level_before);
+  if (levelled) setTimeout(() => sound.play("levelup"), DISPLAY.levelup_sound_ms);
   const units = el("x-units");
   units.replaceChildren();
   for (const u of r.units) {
@@ -411,6 +437,42 @@ function wireOnline() {
   });
 }
 
+// ---- sound ------------------------------------------------------------------
+
+function showMute(muted) {
+  for (const id of ["m-mute", "a-mute"]) el(id).textContent = muted ? t("sound_off") : t("sound_on");
+}
+
+function wireSound() {
+  let muted = false;
+  try {
+    muted = localStorage.getItem(DISPLAY.mute_key) === "1";
+  } catch (e) {
+    muted = false;
+  }
+  if (muted) sound.toggleMute();
+  showMute(muted);
+  const flip = () => {
+    sound.wake();
+    muted = sound.toggleMute();
+    showMute(muted);
+    try {
+      localStorage.setItem(DISPLAY.mute_key, muted ? "1" : "0");
+    } catch (e) {
+      // fine
+    }
+  };
+  el("m-mute").addEventListener("click", flip);
+  el("a-mute").addEventListener("click", flip);
+  // browsers start sound only after a person presses something
+  window.addEventListener("pointerdown", () => sound.wake());
+  window.addEventListener("keydown", () => sound.wake());
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (b && !b.classList.contains("mute")) sound.play("click");
+  });
+}
+
 // ---- start -----------------------------------------------------------------
 
 // Fetch every picture once, after the menu is up, so a portrait or backdrop
@@ -436,9 +498,12 @@ async function text(path) {
 
 async function start() {
   await init();
-  const [units, campaign, copy, display] = await Promise.all(["data/units.json", "data/campaign.json", "data/copy.json", "data/display.json"].map(text));
+  const [units, campaign, copy, display, sounds, vertex, fragment] = await Promise.all(
+    ["data/units.json", "data/campaign.json", "data/copy.json", "data/display.json", "data/sounds.json", "data/shaders/scene.vert", "data/shaders/scene.frag"].map(text),
+  );
   COPY = JSON.parse(copy);
   DISPLAY = JSON.parse(display);
+  sound.setup(JSON.parse(sounds));
   for (const e of document.querySelectorAll("[data-copy]")) e.textContent = t(e.dataset.copy);
   document.title = t("title");
   el("source").href = DISPLAY.source_url;
@@ -449,6 +514,16 @@ async function start() {
     saved = "";
   }
   game = new Game(units, campaign, saved);
+  const N = JSON.parse(stage_numbers());
+  let renderer = null;
+  try {
+    renderer = makeRenderer(el("stage"), N, { vertex, fragment }, (id) => mesh_vertices(id));
+  } catch (e) {
+    // the fight still plays on the tiles
+    console.warn("the 3D stage could not start", e);
+  }
+  stage = { renderer, N, game };
+  wireSound();
   el("o-code").placeholder = t("online_code_placeholder");
   for (const b of document.querySelectorAll("button.back")) b.addEventListener("click", renderMenu);
   el("b-campaign").addEventListener("click", () => {

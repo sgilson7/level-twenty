@@ -13,6 +13,15 @@
 
 Everything the request asked for is in: 3v3 fights that play themselves; a campaign (fifteen fights in three parts of town) and a completely random mode; an account level, earned from fights, that decides which units you can field (three starters, then one unlock per level from 2 to 10); twelve units, each with XP and a level to 20, every level adding attack, HP and speed; melee, magic and ranged, each weak to one; turns from speed on a Summoners War attack bar; online 1v1; TikZ art for every picture, after `Sam_Comm_final.png`.
 
+## Second round (same day): sound, a 3D stage, three skills per unit
+
+- **Three skills each** (PLAN P12): learned at levels 1, 5 and 10; picked per unit on the Crew screen; the results screen says when a unit learns one. Two new effects, Mend and Slow.
+- **The 3D stage** (P13, P14): between the tiles, WebGL 2. Units run in and swing, shoot, or raise and hurl an orb; hits knock back and flash; the fallen fall; stunned units have stars; a ready skill glows at the feet; skill callouts over the stage; floating numbers over the units' heads as well as on the tiles. Each part of town has its own 3D scenery (market stalls and string lights; a roof with a water tower, a mast and laundry; scrap heaps, tyres, a crane and the mech cat asleep).
+- **Sound** (P15): synthesized, with a mute button.
+- Online protocol is now 2 (a unit carries its skill).
+
+Checks for this round are in the table below, marked "round 2".
+
 ## Checks run, and results
 
 | Command | Result |
@@ -24,6 +33,8 @@ Everything the request asked for is in: 3v3 fights that play themselves; a campa
 | Room code against the live site, two Chromium browsers through the public relays and STUN | met in 1.3 s; one fight, one Victory and one Defeat; no console error |
 | Website `make check`, `make packet`, `make gate`, then `make deploy` and `make gate-live` | all passed |
 | Website `testing/engines.py`, Level Twenty alone, live | drew in Chromium, Firefox and WebKit |
+| round 2: `cargo test --workspace` | 86 unit tests (skills, Mend, Slow, figures, stage timeline, choreography, camera marks, scenery), 12 boundary tests, 1 campaign probe: all pass. Campaign probe with enemies on their best skills: 41 to 54 fights |
+| round 2: `./scripts/check.sh` (local, three engines) | BUILDER CHECK PASSED: browser check (now also "the 3D stage drew the fight" and the skill picker) and the two-browser online check in Chromium, Firefox and WebKit |
 | `cargo mutants -p lt_core` (on the first commit, before the online fix) | 540 mutants in 25 min: 351 caught, 156 missed, 18 unviable, 15 timeouts. Not part of `check.sh` |
 
 ## Waiting on Sam

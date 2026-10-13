@@ -2,6 +2,7 @@
   "chapters": [
     {"name": "Market Street", "backdrop": "market",
      "blurb": "The stalls are open, the signs are humming, and somebody's crew wants the corner.",
+     "palette": {"sky": "#F5DA92", "fog": "#EFC46A", "ground": "#D8C3A4", "floor": "#E7C9A0", "walls": ["#E88A73", "#EE9F7E", "#E47A7E", "#F0B07E", "#D9765F"], "trim": "#E0483E"},
      "stages": [
        {"name": "The Corner Store", "enemies": [["rook", 1], ["pip", 1], ["vela", 1]]},
        {"name": "Noodle Stand", "enemies": [["nan", 1], ["rook", 2], ["pip", 2]]},
@@ -11,6 +12,7 @@
      ]},
     {"name": "The Rooftops", "backdrop": "rooftops",
      "blurb": "Water tanks, antennas and air conditioners, and a crew that flies between them.",
+     "palette": {"sky": "#F5DA92", "fog": "#F0B07E", "ground": "#8E7A86", "floor": "#B8A084", "walls": ["#E99A8A", "#EE9F7E", "#F0B07E", "#E7C9A0", "#D9765F"], "trim": "#4FA3A0"},
      "stages": [
        {"name": "Antenna Garden", "enemies": [["static", 6], ["dee", 5], ["ed", 6]]},
        {"name": "Water Tower", "enemies": [["june", 7], ["sage", 7], ["rook", 6]]},
@@ -20,6 +22,7 @@
      ]},
     {"name": "Chum's Junkyard", "backdrop": "junkyard",
      "blurb": "Where the city's scrap goes, and where the mech cat sleeps on top of it.",
+     "palette": {"sky": "#F5DA92", "fog": "#E9B060", "ground": "#C9A47E", "floor": "#D8C3A4", "walls": ["#8D9A93", "#D9765F", "#6F8F66", "#B9835A", "#4FA3A0"], "trim": "#FFB000"},
      "stages": [
        {"name": "Scrap Gate", "enemies": [["ed", 11], ["sage", 10], ["tagger", 10]]},
        {"name": "Tyre Mountain", "enemies": [["biscuit", 12], ["dee", 12], ["nan", 12]]},

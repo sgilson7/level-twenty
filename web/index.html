@@ -46,6 +46,7 @@
         <button id="b-roster" class="big-button"><b data-copy="menu_roster"></b><span data-copy="menu_roster_sub"></span></button>
       </nav>
       <div class="menu-foot">
+        <button id="m-mute" class="link mute"></button>
         <button id="b-help" class="link" data-copy="menu_help"></button>
         <button id="b-reset" class="link" data-copy="reset"></button>
         <a id="source" class="link" data-copy="source"></a>
@@ -140,10 +141,15 @@
   <section id="battle" class="screen" hidden>
     <div class="arena" id="arena">
       <img id="backdrop" class="backdrop" alt="">
-      <div class="arena-title" id="a-title"></div>
       <div class="side mine" id="side-0"></div>
+      <div class="stage-wrap">
+        <canvas id="stage" aria-hidden="true"></canvas>
+        <div id="stage-floats" class="stage-floats"></div>
+        <div class="arena-title" id="a-title"></div>
+        <div class="callout" id="a-call" hidden></div>
+        <div class="banner" id="a-banner" hidden></div>
+      </div>
       <div class="side foe" id="side-1"></div>
-      <div class="banner" id="a-banner" hidden></div>
     </div>
     <div class="battle-foot">
       <p id="a-log" class="log" aria-live="polite"></p>
@@ -151,6 +157,7 @@
         <span class="muted small" data-copy="speed"></span>
         <span id="a-speeds" class="speeds"></span>
         <button id="a-skip" data-copy="skip"></button>
+        <button id="a-mute" class="mute"></button>
       </div>
     </div>
   </section>
@@ -170,6 +177,7 @@
       </div>
       <p id="x-levelup" class="levelup"></p>
       <ul id="x-unlocks" class="unlocks"></ul>
+      <ul id="x-skills" class="unlocks"></ul>
       <div id="x-units" class="x-units"></div>
       <p id="x-note" class="muted small"></p>
       <div class="row">

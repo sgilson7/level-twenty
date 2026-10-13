@@ -44,6 +44,11 @@ def run(page, check, engine):
     check(page.locator("#r-grid .unit-card").count() == 12, "the roster has twelve units")
     check(page.locator("#r-grid .unit-card.locked").count() == 9, "nine are locked at account level 1")
     check(images_loaded(page, "#roster"), "every portrait and kind icon loaded")
+    page.click("#r-grid .unit-card[data-unit='rook']")
+    picks = page.locator("#r-detail .skill-pick")
+    check(picks.count() == 3, "a unit shows three skills")
+    check(page.locator("#r-detail .skill-pick:disabled").count() == 2, "at level 1 only the first skill can be picked")
+    check("chosen" in (picks.nth(0).get_attribute("class") or ""), "and it is the one in use")
     page.click("#r-grid .unit-card[data-unit='chum']")
     check(page.inner_text("#r-error") == COPY["team_locked"], "a locked unit cannot join the crew")
     # put Pip in the first slot: Pip is already in the crew, so it is refused
@@ -62,6 +67,13 @@ def run(page, check, engine):
     page.wait_for_selector("body[data-mode='battle']", state="attached", timeout=5000)
     check(page.locator("#side-0 .fighter").count() == 3 and page.locator("#side-1 .fighter").count() == 3, "three against three")
     check(images_loaded(page, "#battle"), "the backdrop and fighters loaded")
+    try:
+        page.wait_for_selector("body[data-stage='drawn']", state="attached", timeout=10000)
+        drawn = True
+    except Exception:
+        drawn = False
+    check(drawn, "the 3D stage drew the fight")
+    check(page.locator("#f-0-0 .f-skill").inner_text() != "", "each tile names the skill its unit fields")
     page.click("#a-speeds .speed >> nth=-1")
     page.wait_for_selector("body[data-mode='result']", state="attached", timeout=90000)
     head = page.inner_text("#x-head")

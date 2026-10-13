@@ -10,8 +10,14 @@
 pub mod balance;
 pub mod battle;
 pub mod content;
+pub mod figure;
+pub mod fx;
 pub mod game;
+pub mod geom;
+pub mod mesh;
 pub mod online;
 pub mod online_code;
 pub mod profile;
+pub mod render;
 pub mod rng;
+pub mod stage;

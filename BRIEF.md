@@ -4,6 +4,10 @@
 
 > Please use the Builder repo as a base in the directory above, and use the work and repos of Sam gilson at sgilson7.github.io, which can all be found one directory up. please build out the MVP and deploy it to my website. you have approval for creating a public github repo, github pages, and approval to deploy to my website when its ready. any time you need to make 2D art and any kind of asset for the game, use the tikz latex prompt you can find in other repos, and use sam comm final as an inspiration image, alongside the menu screens of all of the sgilson7 games which use a similar build pipeline for images. now build the mvp for the game and deploy it, dont stop till its deployed, good luck. auto battler with a campaign style battle mode, or a completely random game mode. 3v3 fights. you have a level out of combat for that determines which units you can use. all units have xp and levels. levels give more stats (attack, hp, speed). units attacks are determined by Magic, Range, or Melee typing. Melee weak to magic, magic weak to ranged, ranged weak to melee. Kind of like Summoners wars except for levels on your units that could stack to lvl 20. Could have online 1v1 mode as well
 
+## The second request (Sam, 12 October 2026)
+
+> ok now for some sound effects, then there should be a 3d represntation of the battle going on in between the current tiles that have each characters stats and callouts during battle. im thinking something final fnatasy 13, where the characters move around the enviroment and actually cast their spells against each other. each character should have 3 abilities you can choose from for battle, that you get as you level them up
+
 ## The game
 
 A browser auto battler. A player fields a crew of three; fights play themselves, three against three, and the player watches, then spends what the fight paid. Played with a mouse or a finger, on a laptop or a phone.

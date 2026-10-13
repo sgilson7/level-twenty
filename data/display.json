@@ -2,10 +2,17 @@
   "turn_ms": 900,
   "hit_ms": 260,
   "float_ms": 1100,
-  "speeds": [1, 2, 4],
+  "speeds": [
+    1,
+    2,
+    4
+  ],
   "result_delay_ms": 700,
   "online_poll_ms": 250,
   "save_key": "level-twenty-save-v1",
   "speed_key": "level-twenty-speed",
-  "source_url": "https://github.com/sgilson7/level-twenty"
+  "source_url": "https://github.com/sgilson7/level-twenty",
+  "callout_ms": 1300,
+  "levelup_sound_ms": 400,
+  "mute_key": "level-twenty-muted"
 }

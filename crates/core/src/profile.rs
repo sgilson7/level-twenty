@@ -16,6 +16,9 @@ pub struct UnitProgress {
     pub id: String,
     pub level: u32,
     pub xp: u32,
+    /// Which of the unit's three skills it fields.
+    #[serde(default)]
+    pub skill: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -46,6 +49,8 @@ pub struct Reward {
     /// Units the account's new level lets the player field.
     pub unlocked: Vec<String>,
     pub units: Vec<UnitReward>,
+    /// Skills that a level-up in this fight opened: (unit name, skill name).
+    pub skills_opened: Vec<(String, String)>,
     pub stars: u8,
     /// Three less the stars, so the page can draw the empty ones.
     pub stars_missing: u8,
@@ -84,6 +89,7 @@ impl Profile {
                     id: u.id.clone(),
                     level: 1,
                     xp: 0,
+                    skill: 0,
                 })
                 .collect(),
             stars: vec![0; content.stage_count()],
@@ -113,10 +119,16 @@ impl Profile {
         let mut p = fresh.clone();
         p.level = old.level.clamp(1, MAX_ACCOUNT_LEVEL);
         p.xp = old.xp.min(account_xp_to_next(p.level));
-        for u in p.units.iter_mut() {
+        for (k, u) in p.units.iter_mut().enumerate() {
             if let Some(o) = old.units.iter().find(|o| o.id == u.id) {
                 u.level = clamp_unit_level(o.level);
                 u.xp = o.xp.min(unit_xp_to_next(u.level));
+                // a skill the unit's level does not open goes back to the first
+                u.skill = if content.units[k].skill_open(o.skill, u.level) {
+                    o.skill
+                } else {
+                    0
+                };
             }
         }
         for (i, s) in old.stars.iter().take(p.stars.len()).enumerate() {
@@ -165,12 +177,21 @@ impl Profile {
         Ok(out)
     }
 
-    pub fn team_entries(&self, content: &Content) -> Vec<(usize, u32)> {
+    pub fn team_entries(&self, content: &Content) -> Vec<crate::battle::Entry> {
         self.check_team(content, &self.team)
             .unwrap_or_default()
             .into_iter()
-            .map(|u| (u, self.unit_level(u)))
+            .map(|u| (u, self.unit_level(u), self.units[u].skill))
             .collect()
+    }
+
+    /// Fields skill `k` on unit `u`. The error is a key into copy.json.
+    pub fn set_skill(&mut self, content: &Content, u: usize, k: usize) -> Result<(), &'static str> {
+        if !content.units[u].skill_open(k, self.units[u].level) {
+            return Err("skill_locked");
+        }
+        self.units[u].skill = k;
+        Ok(())
     }
 
     /// Whether a stage may be played: the first always, each later one once
@@ -205,6 +226,7 @@ impl Profile {
             .map(|u| u.id.clone())
             .collect();
         let mut rewards = Vec::new();
+        let mut opened = Vec::new();
         for &u in units {
             let p = &mut self.units[u];
             let before = p.level;
@@ -216,6 +238,13 @@ impl Profile {
             }
             if p.level == MAX_UNIT_LEVEL {
                 p.xp = 0;
+            }
+            for sk in content.units[u]
+                .skills
+                .iter()
+                .filter(|s| s.unlock > before && s.unlock <= p.level)
+            {
+                opened.push((content.units[u].name.clone(), sk.name.clone()));
             }
             rewards.push(UnitReward {
                 id: p.id.clone(),
@@ -243,6 +272,7 @@ impl Profile {
             xp_pct: self.account_xp_pct(),
             unlocked,
             units: rewards,
+            skills_opened: opened,
             stars: 0,
             stars_missing: 0,
             first_clear: false,
@@ -332,6 +362,30 @@ mod tests {
         let back = Profile::load(&c, &p.save());
         assert_eq!(back.units[0].level, MAX_UNIT_LEVEL);
         assert_eq!(back.team, vec!["rook", "vela", "pip"]);
+    }
+
+    #[test]
+    fn a_skill_can_be_fielded_only_once_its_level_is_reached() {
+        let c = content();
+        let mut p = Profile::new(&c);
+        assert_eq!(p.set_skill(&c, 0, 1), Err("skill_locked"));
+        let r = p.grant(&c, true, 0, &[0], 1_000);
+        assert!(p.units[0].level >= 5);
+        assert!(r.skills_opened.iter().any(|(_, s)| s == "Two-Piece"));
+        assert_eq!(p.set_skill(&c, 0, 1), Ok(()));
+        assert_eq!(p.team_entries(&c)[0], (0, p.units[0].level, 1));
+        assert_eq!(p.set_skill(&c, 0, 2), Err("skill_locked"));
+        assert_eq!(p.set_skill(&c, 0, 3), Err("skill_locked"));
+    }
+
+    #[test]
+    fn a_saved_skill_the_level_does_not_open_falls_back_to_the_first() {
+        let c = content();
+        let mut p = Profile::new(&c);
+        p.units[0].skill = 2;
+        assert_eq!(Profile::load(&c, &p.save()).units[0].skill, 0);
+        p.units[0].level = 12;
+        assert_eq!(Profile::load(&c, &p.save()).units[0].skill, 2);
     }
 
     #[test]

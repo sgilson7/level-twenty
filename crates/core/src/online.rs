@@ -16,8 +16,12 @@ use crate::battle::{self, Entry, Record};
 use crate::content::Content;
 use crate::online_code;
 
-/// Bumped when a message changes shape.
-pub const PROTOCOL: u32 = 1;
+/// Bumped when a message changes shape. 2: a unit on the wire carries its
+/// chosen skill.
+pub const PROTOCOL: u32 = 2;
+
+/// A unit on the wire: its id, its level and the skill it fields.
+pub type Wire = (String, u32, usize);
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(tag = "t", rename_all = "lowercase")]
@@ -25,12 +29,12 @@ pub enum Msg {
     Hello {
         protocol: u32,
         build: String,
-        team: Vec<(String, u32)>,
+        team: Vec<Wire>,
     },
     Start {
         seed: u64,
-        host: Vec<(String, u32)>,
-        joiner: Vec<(String, u32)>,
+        host: Vec<Wire>,
+        joiner: Vec<Wire>,
         sum: u32,
     },
     Bye {
@@ -61,7 +65,7 @@ pub struct Session {
     /// The one other browser, once its link is up.
     peer: Option<u32>,
     /// Its team, once it has said hello.
-    pub foe: Option<Vec<(String, u32)>>,
+    pub foe: Option<Vec<Wire>>,
     /// A key into copy.json saying what is happening.
     pub status: &'static str,
     outbox: Vec<(u32, String)>,
@@ -87,24 +91,27 @@ impl Default for Session {
 
 /// Reads a team someone else sent, refusing anything that is not three
 /// different known units at levels 1 to 20.
-pub fn read_team(content: &Content, team: &[(String, u32)]) -> Option<Vec<Entry>> {
+pub fn read_team(content: &Content, team: &[Wire]) -> Option<Vec<Entry>> {
     if team.len() != TEAM_SIZE {
         return None;
     }
     let mut out: Vec<Entry> = Vec::new();
-    for (id, level) in team {
+    for (id, level, skill) in team {
         let u = content.unit_index(id)?;
         if out.iter().any(|e| e.0 == u) || !(1..=crate::balance::MAX_UNIT_LEVEL).contains(level) {
             return None;
         }
-        out.push((u, *level));
+        if !content.units[u].skill_open(*skill, *level) {
+            return None;
+        }
+        out.push((u, *level, *skill));
     }
     Some(out)
 }
 
-pub fn write_team(content: &Content, team: &[Entry]) -> Vec<(String, u32)> {
+pub fn write_team(content: &Content, team: &[Entry]) -> Vec<Wire> {
     team.iter()
-        .map(|&(u, l)| (content.units[u].id.clone(), l))
+        .map(|&(u, l, k)| (content.units[u].id.clone(), l, k))
         .collect()
 }
 
@@ -145,7 +152,7 @@ impl Session {
             .push((to, serde_json::to_string(msg).unwrap_or_default()));
     }
 
-    fn hello(&self, team: &[(String, u32)]) -> Msg {
+    fn hello(&self, team: &[Wire]) -> Msg {
         Msg::Hello {
             protocol: PROTOCOL,
             build: self.build.clone(),
@@ -154,7 +161,7 @@ impl Session {
     }
 
     /// The transport has a link to another browser.
-    pub fn peer(&mut self, id: u32, my_team: &[(String, u32)]) {
+    pub fn peer(&mut self, id: u32, my_team: &[Wire]) {
         if self.role == Role::Off {
             return;
         }
@@ -182,14 +189,14 @@ impl Session {
     }
 
     /// My team changed: tell the other browser.
-    pub fn retell(&mut self, my_team: &[(String, u32)]) {
+    pub fn retell(&mut self, my_team: &[Wire]) {
         if let Some(id) = self.peer {
             let hello = self.hello(my_team);
             self.send(id, &hello);
         }
     }
 
-    pub fn message(&mut self, content: &Content, id: u32, text: &str, my_team: &[(String, u32)]) {
+    pub fn message(&mut self, content: &Content, id: u32, text: &str, my_team: &[Wire]) {
         if self.peer != Some(id) {
             return;
         }
@@ -321,13 +328,13 @@ mod tests {
     use super::*;
     use crate::content::fixtures::content;
 
-    fn team(v: &[(&str, u32)]) -> Vec<(String, u32)> {
-        v.iter().map(|(s, l)| (s.to_string(), *l)).collect()
+    fn team(v: &[(&str, u32)]) -> Vec<Wire> {
+        v.iter().map(|(s, l)| (s.to_string(), *l, 0)).collect()
     }
 
     /// Carries every message in both outboxes to the other side until
     /// neither has anything left to say.
-    fn pump(c: &Content, host: &mut Session, join: &mut Session, ht: &[(String, u32)], jt: &[(String, u32)]) {
+    fn pump(c: &Content, host: &mut Session, join: &mut Session, ht: &[Wire], jt: &[Wire]) {
         loop {
             let a = host.take_outbox();
             let b = join.take_outbox();
@@ -419,6 +426,12 @@ mod tests {
         assert!(read_team(&c, &team(&[("rook", 2), ("zed", 1), ("pip", 1)])).is_none());
         assert!(read_team(&c, &team(&[("rook", 2), ("vela", 1)])).is_none());
         assert!(read_team(&c, &team(&[("rook", 20), ("vela", 1), ("pip", 1)])).is_some());
+        // a skill the unit's level has not opened
+        let mut t = team(&[("rook", 4), ("vela", 1), ("pip", 1)]);
+        t[0].2 = 1;
+        assert!(read_team(&c, &t).is_none());
+        t[0].1 = 5;
+        assert!(read_team(&c, &t).is_some());
     }
 
     #[test]

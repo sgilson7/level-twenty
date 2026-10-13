@@ -62,6 +62,10 @@ pub enum Effect {
     Double,
     /// A hit, and every other ally's turn comes sooner.
     Haste,
+    /// Mends every ally standing, the caster included.
+    Mend,
+    /// A hit, and the target's turn is pushed back.
+    Slow,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -73,6 +77,74 @@ pub struct Skill {
     pub power: i32,
     /// Own turns between uses.
     pub cooldown: i32,
+    /// The unit level at which the skill may be chosen.
+    pub unlock: u32,
+}
+
+/// How a unit is built in the 3D fight (crates/core/src/figure.rs). Colours
+/// are `#RRGGBB`; `size` is percent of a grown person's height.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Look {
+    pub body: Body,
+    pub skin: String,
+    pub top: String,
+    pub legs: String,
+    pub hair: String,
+    pub hat: Hat,
+    pub prop: Prop,
+    pub accent: String,
+    pub size: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Body {
+    Person,
+    Cat,
+    Dog,
+    Raccoon,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Hat {
+    None,
+    Flat,
+    Witch,
+    Cap,
+    Bun,
+    Visor,
+    Antenna,
+    Goggles,
+    Chimney,
+    Headset,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Prop {
+    None,
+    Fists,
+    Orb,
+    Slingshot,
+    Lantern,
+    Pistons,
+    Jet,
+    Drone,
+    Spray,
+}
+
+/// `#RRGGBB` to a colour with each channel in Q16; anything else is ink.
+pub type Rgb = [i32; 3];
+
+pub fn hex(s: &str) -> Rgb {
+    let t = s.trim_start_matches('#');
+    if t.len() != 6 || !t.chars().all(|c| c.is_ascii_hexdigit()) {
+        return [0; 3];
+    }
+    let ch = |i: usize| i32::from_str_radix(&t[i..i + 2], 16).unwrap_or(0) * crate::fx::ONE / 255;
+    [ch(0), ch(2), ch(4)]
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -89,7 +161,9 @@ pub struct UnitDef {
     pub hp: [i32; 2],
     pub atk: [i32; 2],
     pub spd: [i32; 2],
-    pub skill: Skill,
+    /// Three, unlocking as the unit levels; the player picks one to field.
+    pub skills: Vec<Skill>,
+    pub look: Look,
 }
 
 /// A unit's three numbers at one level.
@@ -108,6 +182,20 @@ impl UnitDef {
             atk: self.atk[0] + self.atk[1] * l,
             spd: self.spd[0] + self.spd[1] * l,
         }
+    }
+
+    /// Whether skill `k` may be fielded at `level`.
+    pub fn skill_open(&self, k: usize, level: u32) -> bool {
+        self.skills.get(k).map(|s| s.unlock <= level).unwrap_or(false)
+    }
+
+    /// The last skill a unit at `level` has unlocked: what a campaign enemy
+    /// fields.
+    pub fn best_skill(&self, level: u32) -> usize {
+        (0..self.skills.len())
+            .rev()
+            .find(|&k| self.skill_open(k, level))
+            .unwrap_or(0)
     }
 }
 
@@ -132,6 +220,19 @@ pub struct ChapterDef {
     pub backdrop: String,
     pub blurb: String,
     pub stages: Vec<StageDef>,
+    /// The 3D stage's colours for this part of town.
+    pub palette: Palette,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct Palette {
+    pub sky: String,
+    pub fog: String,
+    pub ground: String,
+    pub floor: String,
+    pub walls: Vec<String>,
+    pub trim: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -174,8 +275,41 @@ impl Content {
             if u.hp[1] < 0 || u.atk[1] < 0 || u.spd[1] < 0 {
                 return Err(format!("units.json: {} shrinks as it levels", u.id));
             }
-            if u.skill.power <= 0 || u.skill.cooldown < 1 {
-                return Err(format!("units.json: {}'s skill needs power and a cooldown", u.id));
+            if u.skills.len() != balance::SKILLS {
+                return Err(format!("units.json: {} needs three skills", u.id));
+            }
+            for (k, sk) in u.skills.iter().enumerate() {
+                if sk.power <= 0 || sk.cooldown < 1 {
+                    return Err(format!(
+                        "units.json: {}'s {} needs power and a cooldown",
+                        u.id, sk.name
+                    ));
+                }
+                let first = k == 0 && sk.unlock != 1;
+                let backwards = k > 0 && sk.unlock <= u.skills[k - 1].unlock;
+                if first || backwards || sk.unlock > balance::MAX_UNIT_LEVEL {
+                    return Err(format!(
+                        "units.json: {}'s skills must unlock at 1, then later, by 20",
+                        u.id
+                    ));
+                }
+            }
+            for c in [
+                &u.look.skin,
+                &u.look.top,
+                &u.look.legs,
+                &u.look.hair,
+                &u.look.accent,
+            ] {
+                if c.len() != 7 || hex(c) == [0; 3] && c != "#000000" {
+                    return Err(format!(
+                        "units.json: {} has a colour {c} that is not #RRGGBB",
+                        u.id
+                    ));
+                }
+            }
+            if !(40..=250).contains(&u.look.size) {
+                return Err(format!("units.json: {}'s size is out of range", u.id));
             }
             if u.unlock < 1 || u.unlock > balance::MAX_ACCOUNT_LEVEL {
                 return Err(format!("units.json: {} unlocks at an unreachable level", u.id));
@@ -275,6 +409,34 @@ mod tests {
         assert!(b.hp > a.hp && b.atk > a.atk && b.spd > a.spd);
         assert_eq!(rook.stats(20), rook.stats(99));
         assert_eq!(rook.stats(1), rook.stats(0));
+    }
+
+    #[test]
+    fn every_unit_has_three_skills_unlocking_at_one_five_and_ten() {
+        let c = content();
+        for u in &c.units {
+            let at: Vec<u32> = u.skills.iter().map(|s| s.unlock).collect();
+            assert_eq!(at, vec![1, 5, 10], "{}", u.id);
+            assert_eq!(u.best_skill(1), 0);
+            assert_eq!(u.best_skill(5), 1);
+            assert_eq!(u.best_skill(20), 2);
+            assert!(u.skill_open(0, 1) && !u.skill_open(1, 4) && u.skill_open(1, 5) && !u.skill_open(3, 20));
+        }
+    }
+
+    #[test]
+    fn skills_out_of_order_are_refused() {
+        let bad = UNITS.replacen("\"unlock\": 5}", "\"unlock\": 1}", 1);
+        assert!(Content::parse(&bad, CAMPAIGN)
+            .unwrap_err()
+            .contains("unlock at 1"));
+    }
+
+    #[test]
+    fn a_colour_is_read_as_sixteen_bit_channels() {
+        assert_eq!(hex("#FF0000"), [crate::fx::ONE, 0, 0]);
+        assert_eq!(hex("#808080")[1], 128 * crate::fx::ONE / 255);
+        assert_eq!(hex("nope"), [0; 3]);
     }
 
     #[test]
