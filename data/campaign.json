@@ -1,10 +1,10 @@
 {
   "chapters": [
     {"name": "Market Street", "backdrop": "market",
-     "blurb": "The stalls are open, the signs are humming, and somebody's crew wants the corner.",
+     "blurb": "The stalls are open, the signs are humming, and the whole street has come out for the fair.",
      "palette": {"sky": "#F5DA92", "fog": "#EFC46A", "ground": "#D8C3A4", "floor": "#E7C9A0", "walls": ["#E88A73", "#EE9F7E", "#E47A7E", "#F0B07E", "#D9765F"], "trim": "#E0483E"},
      "stages": [
-       {"name": "The Corner Store", "enemies": [["rook", 1], ["pip", 1], ["vela", 1]]},
+       {"name": "The Fruit Stall", "enemies": [["rook", 1], ["pip", 1], ["vela", 1]]},
        {"name": "Noodle Stand", "enemies": [["nan", 1], ["rook", 2], ["pip", 2]]},
        {"name": "Under the Sign", "enemies": [["vela", 2], ["ed", 2], ["static", 2]]},
        {"name": "Bottle Alley", "enemies": [["pip", 3], ["june", 3], ["rook", 3]]},

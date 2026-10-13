@@ -32,6 +32,17 @@ Checks for this round are in the table below, marked "round 2".
 
 Checks for this round are marked "round 3".
 
+## Fourth round (13 October): no drug-dealing connotations
+
+Sam asked that the Market Street line "somebody's crew wants the corner" go, along with anything else that reads as drug dealing. Every string a player reads (`data/`) and the website listing were read for it. Changed:
+
+- Market Street's blurb now reads "...and the whole street has come out for the fair."
+- The first stage "The Corner Store" is now "The Fruit Stall", so no "corner" is left in the game.
+- Random's "Deal again" button and the help line "Random deals two crews" now say "Draw" (the listing on sgilson7.github.io likewise).
+- Smog Sage's blurb no longer "breathes in the city's smoke"; it now "gathers up the city's smog and sends it rolling back at you".
+
+"Crew" stays: on its own it reads as a team. Whether any other word should go is Sam's call.
+
 ## Checks run, and results
 
 | Command | Result |

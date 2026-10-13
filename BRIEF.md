@@ -16,6 +16,10 @@
 
 > its hard to tell which team each character is on as they are fighting as they move now
 
+## The fourth request (Sam, 13 October 2026)
+
+> the statement "and somebody's crew wants the corner." has heavy connotations attached to drug dealing, remove any such connotation from the game
+
 ## The game
 
 A browser auto battler. A player fields a crew of three; fights play themselves, three against three, and the player watches, then spends what the fight paid. Played with a mouse or a finger, on a laptop or a phone.

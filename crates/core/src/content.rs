@@ -465,7 +465,7 @@ mod tests {
     #[test]
     fn flat_stage_indexes_walk_through_the_chapters_in_order() {
         let c = content();
-        assert_eq!(c.stage(0).unwrap().1.name, "The Corner Store");
+        assert_eq!(c.stage(0).unwrap().1.name, "The Fruit Stall");
         assert_eq!(c.stage(5).unwrap().0, 1);
         assert_eq!(c.stage(14).unwrap().1.name, "Chum Wakes Up");
         assert!(c.stage(15).is_none());

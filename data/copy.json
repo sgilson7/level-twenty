@@ -110,7 +110,7 @@
   "unit_max": "Level 20",
   "next_stage": "Next fight",
   "retry": "Fight again",
-  "again_random": "Deal again",
+  "again_random": "Draw again",
   "to_campaign": "Campaign",
   "to_menu": "Menu",
   "to_online": "Back to the room",
@@ -162,7 +162,7 @@
   "help_triangle": "Every unit attacks with melee, magic or ranged. Melee is weak to magic, magic is weak to ranged, and ranged is weak to melee. A hit with the edge does half again as much damage; a hit against it does a bit over two thirds.",
   "help_turns": "Fights play themselves. Each unit's turn bar fills at its speed; when it fills, the unit attacks the enemy it has the edge over, or the one with least health. Every few turns it uses its skill instead. Melee units run in and swing, ranged units shoot, and magic users throw what they conjure.",
   "help_levels": "Units earn XP from fights and level up to 20. Each level adds HP, attack and speed, and every unit learns a second skill at level 5 and a third at level 10: pick the one it uses on the Crew screen. Your account levels up too, and your account level decides which units you can put in your crew.",
-  "help_modes": "Campaign is fifteen set fights; stars count the units you had standing at the end. Random deals two crews from the whole roster. Online puts your crew against a friend's.",
+  "help_modes": "Campaign is fifteen set fights; stars count the units you had standing at the end. Random draws two crews from the whole roster. Online puts your crew against a friend's.",
   "credits": "Drawn in TikZ. A Builder project: every rule runs in a Rust core compiled to WebAssembly.",
   "source": "Source"
 }
